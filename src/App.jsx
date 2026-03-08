@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./styles.css";
 
-// Компонент для анимированных чисел
 const AnimatedNumber = ({ value, prefix = "$", decimals = 2 }) => {
   const [displayValue, setDisplayValue] = useState(0);
 
@@ -10,8 +9,8 @@ const AnimatedNumber = ({ value, prefix = "$", decimals = 2 }) => {
     const end = parseFloat(value) || 0;
     if (start === end) return;
 
-    const duration = 1000; // 1 секунда
-    const increment = end / (duration / 16); // 60fps
+    const duration = 1200;
+    const increment = end / (duration / 16);
 
     const timer = setInterval(() => {
       start += increment;
@@ -34,15 +33,53 @@ const AnimatedNumber = ({ value, prefix = "$", decimals = 2 }) => {
   );
 };
 
+// Money Rain Component
+const MoneyRain = ({ isActive }) => {
+  const [moneys, setMoneys] = useState([]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    const interval = setInterval(() => {
+      const newMoney = {
+        id: Math.random(),
+        left: Math.random() * 100,
+        amount: [1, 5, 10, 20, 50][Math.floor(Math.random() * 5)],
+      };
+      setMoneys((prev) => [...prev, newMoney]);
+
+      setTimeout(() => {
+        setMoneys((prev) => prev.filter((m) => m.id !== newMoney.id));
+      }, 3000);
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [isActive]);
+
+  return (
+    <div className="money-rain">
+      {moneys.map((money) => (
+        <div
+          key={money.id}
+          className="money-drop"
+          style={{ left: `${money.left}%` }}
+        >
+          💵 ${money.amount}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function FreelanceTaxPro() {
   const [income, setIncome] = useState("50000");
   const [platform, setPlatform] = useState("upwork");
   const [country, setCountry] = useState("usa");
   const [desiredIncome, setDesiredIncome] = useState("100000");
   const [hourlyRate, setHourlyRate] = useState("0");
-  const [earnedToday, setEarnedToday] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [showReverse, setShowReverse] = useState(false);
+  const [moneyRainActive, setMoneyRainActive] = useState(false);
   const [particles, setParticles] = useState([]);
 
   const countries = {
@@ -64,38 +101,23 @@ export default function FreelanceTaxPro() {
     direct: { name: "Direct Clients", commission: 0 },
   };
 
-  // Генерируем анимированные частицы
   useEffect(() => {
-    const newParticles = Array.from({ length: 30 }, (_, i) => ({
+    const newParticles = Array.from({ length: 40 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
       top: Math.random() * 100,
-      size: Math.random() * 3 + 1,
-      duration: Math.random() * 20 + 20,
+      size: Math.random() * 4 + 1,
+      duration: Math.random() * 25 + 20,
       delay: Math.random() * 5,
     }));
     setParticles(newParticles);
   }, []);
 
-  // Таймер реального времени
-  useEffect(() => {
-    const incomeNum = parseFloat(income) || 0;
-    const secondsInYear = 365.25 * 24 * 60 * 60;
-    const earningsPerSecond = incomeNum / secondsInYear;
-
-    const timer = setInterval(() => {
-      setEarnedToday((prev) => prev + earningsPerSecond);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [income]);
-
-  // Показываем результаты с задержкой
   useEffect(() => {
     setShowResults(true);
+    setMoneyRainActive(true);
   }, [income, platform, country]);
 
-  // Прямой расчет
   const calculateForward = () => {
     const incomeNum = parseFloat(income) || 0;
     const platformData = platforms[platform];
@@ -112,10 +134,10 @@ export default function FreelanceTaxPro() {
       taxes,
       net: netIncome,
       taxPercentage: (taxes / afterFee) * 100,
+      commissionPercentage: platformData.commission * 100,
     };
   };
 
-  // Обратный расчет
   const calculateBackward = () => {
     const desiredNum = parseFloat(desiredIncome) || 0;
     const platformData = platforms[platform];
@@ -123,13 +145,12 @@ export default function FreelanceTaxPro() {
 
     const requiredGross =
       desiredNum / ((1 - platformData.commission) * (1 - countryData.taxRate));
-    const hourlyRate = requiredGross / 2080;
+    const rate = requiredGross / 2080;
 
-    setHourlyRate(hourlyRate.toFixed(2));
+    setHourlyRate(rate.toFixed(2));
     setShowReverse(true);
   };
 
-  // Сравнение стран
   const compareCountries = () => {
     const incomeNum = parseFloat(income) || 0;
     const platformData = platforms[platform];
@@ -151,12 +172,24 @@ export default function FreelanceTaxPro() {
     return results.sort((a, b) => b.net - a.net);
   };
 
+  const calculateEarnings = (incomeNum) => {
+    const daily = incomeNum / 365;
+    const weekly = incomeNum / 52;
+    const monthly = incomeNum / 12;
+
+    return { daily, weekly, monthly, yearly: incomeNum };
+  };
+
   const forwardResults = calculateForward();
   const countryComparison = compareCountries();
+  const earnings = calculateEarnings(parseFloat(income) || 0);
+  const bestCountry = countryComparison[0];
+  const worstCountry = countryComparison[countryComparison.length - 1];
+  const savings =
+    bestCountry && worstCountry ? bestCountry.net - worstCountry.net : 0;
 
   return (
     <div className="app">
-      {/* АНИМИРОВАННЫЙ ФОН */}
       <div className="animated-bg">
         {particles.map((particle) => (
           <div
@@ -173,26 +206,18 @@ export default function FreelanceTaxPro() {
         ))}
       </div>
 
+      <MoneyRain isActive={moneyRainActive} />
+
       <div className="container">
         {/* ЗАГОЛОВОК */}
         <div className="header fade-in">
-          <h1 className="title-animate">💰 Freelance Calculator</h1>
-          <p className="subtitle-animate">Узнай сколько ты РЕАЛЬНО заработаешь</p>
-        </div>
-
-        {/* ТАЙМЕР */}
-        <div className="timer-box pulse-glow fade-in-delay-1">
-          <div className="timer-content">
-            <span className="timer-label">Ты заработал пока ты здесь:</span>
-            <span className="timer-value pulse">
-              <AnimatedNumber value={earnedToday.toFixed(2)} prefix="$" />
-            </span>
-            <span className="timer-subtext">Зависит от твоего годового дохода</span>
-          </div>
+          <div className="logo">💸</div>
+          <h1 className="title-main">Income Tracker</h1>
+          <p className="subtitle">Узнай РЕАЛЬНЫЙ доход фрилансера</p>
         </div>
 
         {/* INPUTS */}
-        <div className="inputs-section fade-in-delay-2">
+        <div className="inputs-section fade-in-delay-1">
           <div className="input-group">
             <label>💰 Годовой доход ($)</label>
             <input
@@ -200,7 +225,7 @@ export default function FreelanceTaxPro() {
               value={income}
               onChange={(e) => {
                 setIncome(e.target.value);
-                setEarnedToday(0);
+                setMoneyRainActive(true);
               }}
               placeholder="50000"
               className="input-animate"
@@ -238,41 +263,155 @@ export default function FreelanceTaxPro() {
           </div>
         </div>
 
-        {/* РЕЗУЛЬТАТЫ */}
+        {/* SAVINGS BANNER */}
+        {savings > 0 && (
+          <div className="savings-banner bounce-in">
+            <div className="savings-content">
+              <span className="savings-icon">⭐</span>
+              <div className="savings-text">
+                <p className="savings-title">💡 СЭКОНОМЬ МАКСИМУМ!</p>
+                <p className="savings-amount">
+                  Выбери <strong>{bestCountry.name}</strong> вместо{" "}
+                  <strong>{worstCountry.name}</strong>
+                </p>
+                <p className="savings-value">
+                  +<AnimatedNumber value={savings.toFixed(2)} /> в год!
+                </p>
+              </div>
+              <span className="savings-icon">⭐</span>
+            </div>
+          </div>
+        )}
+
+        {/* ВИЗУАЛЬНАЯ ПРОГРЕССИЯ */}
         {showResults && (
-          <div className="results-box fade-in-delay-3">
-            <h2>Сколько ты заработаешь:</h2>
-            <div className="result-grid">
-              <div className="result-card gross slide-in" style={{ "--delay": "0s" }}>
-                <span className="label">Валовой доход</span>
-                <span className="value">
-                  <AnimatedNumber value={forwardResults.gross.toFixed(2)} />
+          <div className="earnings-progression fade-in-delay-2">
+            <h2>Твой доход</h2>
+            <div className="progression-grid">
+              <div className="progression-card day slide-in">
+                <span className="period">За ДЕНЬ</span>
+                <span className="amount">
+                  <AnimatedNumber value={earnings.daily.toFixed(2)} />
                 </span>
               </div>
-
-              <div className="result-card fee slide-in" style={{ "--delay": "0.1s" }}>
-                <span className="label">Комиссия платформы</span>
-                <span className="value">
-                  -<AnimatedNumber value={forwardResults.platformFee.toFixed(2)} />
+              <div className="progression-card week slide-in">
+                <span className="period">За НЕДЕЛЮ</span>
+                <span className="amount">
+                  <AnimatedNumber value={earnings.weekly.toFixed(2)} />
                 </span>
               </div>
-
-              <div className="result-card tax slide-in" style={{ "--delay": "0.2s" }}>
-                <span className="label">Налоги</span>
-                <span className="value">
-                  -<AnimatedNumber value={forwardResults.taxes.toFixed(2)} />
-                  <small> ({forwardResults.taxPercentage.toFixed(1)}%)</small>
+              <div className="progression-card month slide-in">
+                <span className="period">За МЕСЯЦ</span>
+                <span className="amount">
+                  <AnimatedNumber value={earnings.monthly.toFixed(2)} />
                 </span>
               </div>
-
-              <div
-                className="result-card net slide-in bounce-in"
-                style={{ "--delay": "0.3s" }}
-              >
-                <span className="label">💰 ТЫ ЗАРАБОТАЕШЬ</span>
-                <span className="value big">
-                  <AnimatedNumber value={forwardResults.net.toFixed(2)} />
+              <div className="progression-card year slide-in">
+                <span className="period">За ГОД</span>
+                <span className="amount">
+                  <AnimatedNumber value={earnings.yearly.toFixed(2)} />
                 </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* РЕЗУЛЬТАТЫ С ДИАГРАММОЙ */}
+        {showResults && (
+          <div className="results-section fade-in-delay-3">
+            <h2>Куда уходят твои деньги</h2>
+            <div className="results-container">
+              <div className="pie-chart-wrapper">
+                <svg viewBox="0 0 200 200" className="pie-chart">
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    fill="none"
+                    stroke="#27ae60"
+                    strokeWidth="45"
+                    strokeDasharray={`${
+                      (forwardResults.net / forwardResults.gross) * 565
+                    } 565`}
+                    transform="rotate(-90 100 100)"
+                  />
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    fill="none"
+                    stroke="#f39c12"
+                    strokeWidth="45"
+                    strokeDasharray={`${
+                      (forwardResults.taxes / forwardResults.gross) * 565
+                    } 565`}
+                    strokeDashoffset={`-${
+                      (forwardResults.net / forwardResults.gross) * 565
+                    }`}
+                    transform="rotate(-90 100 100)"
+                  />
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="90"
+                    fill="none"
+                    stroke="#e74c3c"
+                    strokeWidth="45"
+                    strokeDasharray={`${
+                      (forwardResults.platformFee / forwardResults.gross) * 565
+                    } 565`}
+                    strokeDashoffset={`-${
+                      ((forwardResults.net + forwardResults.taxes) /
+                        forwardResults.gross) *
+                      565
+                    }`}
+                    transform="rotate(-90 100 100)"
+                  />
+                </svg>
+              </div>
+
+              <div className="chart-legend">
+                <div className="legend-item">
+                  <span className="legend-color net"></span>
+                  <div className="legend-text">
+                    <p className="legend-label">Твой доход</p>
+                    <p className="legend-value">
+                      <AnimatedNumber
+                        value={forwardResults.net.toFixed(2)}
+                        prefix="$"
+                      />
+                      ({((forwardResults.net / forwardResults.gross) * 100).toFixed(1)}%)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="legend-item">
+                  <span className="legend-color tax"></span>
+                  <div className="legend-text">
+                    <p className="legend-label">Налоги</p>
+                    <p className="legend-value">
+                      <AnimatedNumber
+                        value={forwardResults.taxes.toFixed(2)}
+                        prefix="$"
+                      />
+                      ({forwardResults.taxPercentage.toFixed(1)}%)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="legend-item">
+                  <span className="legend-color fee"></span>
+                  <div className="legend-text">
+                    <p className="legend-label">Комиссия платформы</p>
+                    <p className="legend-value">
+                      <AnimatedNumber
+                        value={forwardResults.platformFee.toFixed(2)}
+                        prefix="$"
+                      />
+                      ({forwardResults.commissionPercentage.toFixed(1)}%)
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -280,14 +419,14 @@ export default function FreelanceTaxPro() {
 
         {/* ОБРАТНЫЙ КАЛЬКУЛЯТОР */}
         <div className="reverse-calculator fade-in-delay-4">
-          <h2>📊 Обратный расчет</h2>
+          <h2>📊 Сколько брать за работу?</h2>
           <p className="reverse-subtitle">
             Я хочу заработать $X нетто - какую ставку ставить?
           </p>
 
           <div className="reverse-inputs">
             <div className="input-group">
-              <label>Желаемый нетто доход за год ($)</label>
+              <label>Желаемый доход за год ($)</label>
               <input
                 type="number"
                 value={desiredIncome}
@@ -308,15 +447,14 @@ export default function FreelanceTaxPro() {
           {hourlyRate !== "0" && showReverse && (
             <div className="reverse-result fade-in">
               <p>
-                На платформе <strong>{platforms[platform].name}</strong> в{" "}
+                Твоя ставка на <strong>{platforms[platform].name}</strong> в{" "}
                 <strong>{countries[country].name}</strong>:
               </p>
               <div className="hourly-rate-box bounce-in-box">
-                <span className="hourly-label">Нужна ставка:</span>
-                <span className="hourly-value">
+                <span className="hourly-value big">
                   $<AnimatedNumber value={hourlyRate} prefix="" />
-                  /час
                 </span>
+                <span className="hourly-label">/час</span>
                 <span className="hourly-subtext">
                   для годового дохода ${desiredIncome}
                 </span>
@@ -327,31 +465,31 @@ export default function FreelanceTaxPro() {
 
         {/* СРАВНЕНИЕ СТРАН */}
         <div className="comparison-section fade-in-delay-5">
-          <h2>🗺️ Сравнение стран</h2>
+          <h2>🌍 Где выгоднее работать?</h2>
           <p className="comparison-subtitle">
-            Доход: ${income} на {platforms[platform].name}
+            Сравнение доходов по странам
           </p>
 
           <div className="countries-table">
-            {countryComparison.map((country, index) => (
+            {countryComparison.map((countryItem, index) => (
               <div
-                key={country.key}
+                key={countryItem.key}
                 className={`country-row ${index === 0 ? "best" : ""} stagger-in`}
-                style={{ "--stagger-delay": `${index * 0.1}s` }}
+                style={{ "--stagger-delay": `${index * 0.08}s` }}
               >
                 <div className="country-info">
                   <span className="rank">#{index + 1}</span>
-                  <span className="country-name">{country.name}</span>
+                  <span className="country-name">{countryItem.name}</span>
                 </div>
                 <div className="country-earnings">
                   <span className="net-amount">
-                    <AnimatedNumber value={country.net.toFixed(2)} />
+                    <AnimatedNumber value={countryItem.net.toFixed(2)} />
                   </span>
                   <span className="tax-info">
-                    Налог: {country.taxPercentage.toFixed(1)}%
+                    Налог: {countryItem.taxPercentage.toFixed(1)}%
                   </span>
                 </div>
-                {index === 0 && <span className="badge">⭐ ЛУЧШЕ!</span>}
+                {index === 0 && <span className="badge">🏆 ЛУЧШЕ!</span>}
               </div>
             ))}
           </div>
