@@ -205,7 +205,42 @@ body {
   animation: pulse 0.5s;
 }
 
-/* ЗАГОЛОВОК */
+.language-selector {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+.language-select {
+  padding: 12px 20px;
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #00ff88;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.language-select:hover {
+  border-color: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+}
+
+.language-select option {
+  background: #1a1a2e;
+  color: #00ff88;
+}
+
 .header {
   text-align: center;
   margin-bottom: 50px;
@@ -237,7 +272,6 @@ body {
   font-weight: 400;
 }
 
-/* INPUTS */
 .inputs-section {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -284,7 +318,6 @@ body {
   box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
 }
 
-/* SAVINGS BANNER */
 .savings-banner {
   background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
   border-radius: 15px;
@@ -328,7 +361,6 @@ body {
   color: #27ae60;
 }
 
-/* EARNINGS PROGRESSION */
 .earnings-progression {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 15px;
@@ -398,7 +430,6 @@ body {
   color: #00ff88;
 }
 
-/* РЕЗУЛЬТАТЫ С ДИАГРАММОЙ */
 .results-section {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 15px;
@@ -484,7 +515,6 @@ body {
   color: #fff;
 }
 
-/* ОБРАТНЫЙ КАЛЬКУЛЯТОР */
 .reverse-calculator {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 15px;
@@ -576,7 +606,6 @@ body {
   color: #999;
 }
 
-/* СРАВНЕНИЕ СТРАН */
 .comparison-section {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 15px;
@@ -681,7 +710,6 @@ body {
   animation: shimmer 2s infinite;
 }
 
-/* RESPONSIVE */
 @media (max-width: 768px) {
   .title-main {
     font-size: 36px;
