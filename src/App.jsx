@@ -90,6 +90,9 @@ const translations = {
     compareTitle: "Сравнение по странам",
     hoursPerWeek: "Часов в неделю",
     weeksPerYear: "Недель в году",
+    expenses: "Бизнес-расходы в год",
+    expensesHint: "Ноутбук, ПО, интернет, коворкинг...",
+    taxSaving: "Экономия на налогах",
   },
   en: {
     title: "Income Tracker",
@@ -110,6 +113,9 @@ const translations = {
     compareTitle: "Country Comparison",
     hoursPerWeek: "Hours per week",
     weeksPerYear: "Weeks per year",
+    expenses: "Annual Business Expenses",
+    expensesHint: "Laptop, software, internet, coworking...",
+    taxSaving: "Tax Saving",
   },
   es: {
     title: "Income Tracker",
@@ -130,6 +136,9 @@ const translations = {
     compareTitle: "Comparación por País",
     hoursPerWeek: "Horas por semana",
     weeksPerYear: "Semanas por año",
+    expenses: "Gastos de Negocio Anuales",
+    expensesHint: "Laptop, software, internet, coworking...",
+    taxSaving: "Ahorro Fiscal",
   },
   de: {
     title: "Income Tracker",
@@ -150,6 +159,9 @@ const translations = {
     compareTitle: "Ländervergleich",
     hoursPerWeek: "Stunden pro Woche",
     weeksPerYear: "Wochen pro Jahr",
+    expenses: "Jährliche Betriebsausgaben",
+    expensesHint: "Laptop, Software, Internet, Coworking...",
+    taxSaving: "Steuerersparnis",
   },
   fr: {
     title: "Income Tracker",
@@ -170,6 +182,9 @@ const translations = {
     compareTitle: "Comparaison par Pays",
     hoursPerWeek: "Heures par semaine",
     weeksPerYear: "Semaines par an",
+    expenses: "Dépenses Professionnelles Annuelles",
+    expensesHint: "Ordinateur, logiciels, internet, coworking...",
+    taxSaving: "Économie Fiscale",
   },
   pt: {
     title: "Income Tracker",
@@ -190,6 +205,9 @@ const translations = {
     compareTitle: "Comparação por País",
     hoursPerWeek: "Horas por semana",
     weeksPerYear: "Semanas por ano",
+    expenses: "Despesas Comerciais Anuais",
+    expensesHint: "Laptop, software, internet, coworking...",
+    taxSaving: "Economia Fiscal",
   },
   zh: {
     title: "Income Tracker",
@@ -210,6 +228,9 @@ const translations = {
     compareTitle: "国家对比",
     hoursPerWeek: "每周工作小时",
     weeksPerYear: "每年工作周数",
+    expenses: "年度业务费用",
+    expensesHint: "笔记本、软件、网络、共享办公...",
+    taxSaving: "节税金额",
   },
 };
 
@@ -223,26 +244,30 @@ const langOptions = [
   { code: "zh", label: "🇨🇳 ZH" },
 ];
 
-function calculateTax(income, countryKey, platformKey) {
+function calculateTax(income, countryKey, platformKey, expenses = 0) {
   const incomeNum = parseFloat(income) || 0;
+  const expensesNum = parseFloat(expenses) || 0;
   const c = countries[countryKey];
   const p = platforms[platformKey];
   const platformFee = incomeNum * p.commission;
   const afterPlatform = incomeNum - platformFee;
+  const taxableIncome = Math.max(0, afterPlatform - expensesNum);
   let totalTax = 0;
 
   if (countryKey === "usa") {
-    totalTax = afterPlatform * (c.taxRate + c.seTaxRate + c.stateAvg);
+    totalTax = taxableIncome * (c.taxRate + c.seTaxRate + c.stateAvg);
   } else if (countryKey === "uk") {
-    totalTax = afterPlatform * (c.taxRate + c.niRate);
+    totalTax = taxableIncome * (c.taxRate + c.niRate);
   } else if (countryKey === "ireland") {
-    totalTax = afterPlatform * (c.taxRate + c.prsiRate + c.uscRate);
+    totalTax = taxableIncome * (c.taxRate + c.prsiRate + c.uscRate);
   } else {
-    totalTax = afterPlatform * c.taxRate;
+    totalTax = taxableIncome * c.taxRate;
   }
 
+  const taxWithoutExpenses = afterPlatform * (totalTax / (taxableIncome || 1));
+  const taxSaving = expensesNum > 0 ? (afterPlatform > 0 ? totalTax / (taxableIncome || 1) * expensesNum : 0) : 0;
   const netIncome = afterPlatform - totalTax;
-  return { grossIncome: incomeNum, platformFee, totalTax, netIncome, monthlyNet: netIncome / 12 };
+  return { grossIncome: incomeNum, platformFee, totalTax, netIncome, monthlyNet: netIncome / 12, taxSaving, expensesNum };
 }
 
 export default function FreelanceTaxPro() {
@@ -250,6 +275,7 @@ export default function FreelanceTaxPro() {
   const [income, setIncome] = useState("50000");
   const [platform, setPlatform] = useState("upwork");
   const [country, setCountry] = useState("usa");
+  const [expenses, setExpenses] = useState("0");
   const [desiredIncome, setDesiredIncome] = useState("60000");
   const [hoursPerWeek, setHoursPerWeek] = useState("40");
   const [weeksPerYear, setWeeksPerYear] = useState("48");
@@ -267,7 +293,7 @@ export default function FreelanceTaxPro() {
   }, [language]);
 
   const t = translations[language];
-  const results = calculateTax(income, country, platform);
+  const results = calculateTax(income, country, platform, expenses);
   const c = countries[country];
 
   const totalHours = parseFloat(hoursPerWeek) * parseFloat(weeksPerYear) || 1;
@@ -356,6 +382,15 @@ export default function FreelanceTaxPro() {
                 ))}
               </select>
             </div>
+            <div className="input-group">
+              <label>{t.expenses} ({c.currency})</label>
+              <input
+                type="number"
+                value={expenses}
+                onChange={(e) => setExpenses(e.target.value)}
+                placeholder={t.expensesHint}
+              />
+            </div>
             <button className="calculate-btn" onClick={handleCalculate}>{t.calcBtn} 🚀</button>
 
             {showResults && (
@@ -372,6 +407,12 @@ export default function FreelanceTaxPro() {
                   <span>{t.taxes}</span>
                   <span className="result-value">-{c.currency}<AnimatedNumber value={results.totalTax} prefix="" /></span>
                 </div>
+                {results.expensesNum > 0 && (
+                  <div className="result-row saving">
+                    <span>💡 {t.taxSaving}</span>
+                    <span className="result-value">+{c.currency}<AnimatedNumber value={results.taxSaving} prefix="" /></span>
+                  </div>
+                )}
                 <div className="result-row positive main-result">
                   <span>{t.netIncome} 🎉</span>
                   <span className="result-value">{c.currency}<AnimatedNumber value={results.netIncome} prefix="" /></span>
