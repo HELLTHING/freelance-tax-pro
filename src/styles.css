@@ -407,6 +407,14 @@ body {
   color: #aaa;
 }
 
+.result-row.saving {
+  color: #ffd700;
+  font-size: 15px;
+  background: rgba(255, 215, 0, 0.05);
+  border-radius: 8px;
+  padding: 10px 0;
+}
+
 .result-value {
   font-weight: 700;
   font-size: 18px;
