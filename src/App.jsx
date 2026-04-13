@@ -1,6 +1,3 @@
-Пишу полную версию с нуля! Все функции, 7 языков, анимации. Вставь этот код в `src/App.jsx` на GitHub (заменить всё):
-
-```jsx
 import React, { useState, useEffect } from "react";
 import "./styles.css";
 
@@ -464,6 +461,3 @@ export default function FreelanceTaxPro() {
     </div>
   );
 }
-```
-
-Вставь на GitHub → **App.jsx** → Edit → выдели всё (Ctrl+A) → вставь (Ctrl+V) → Commit. Потом Redeploy на Vercel. 🚀
