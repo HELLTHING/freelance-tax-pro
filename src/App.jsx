@@ -1,6 +1,3 @@
-Пишу полную версию с нуля! Все функции, 7 языков, анимации. Вставь этот код в `src/App.jsx` на GitHub (заменить всё):
-
-```jsx
 import React, { useState, useEffect } from "react";
 import "./styles.css";
 
@@ -60,7 +57,7 @@ const countries = {
   ireland: { name: "Ireland", currency: "€", taxRate: 0.4, prsiRate: 0.04, uscRate: 0.08, flag: "🇮🇪" },
   canada: { name: "Canada", currency: "CAD $", taxRate: 0.25, provAvg: 0.08, flag: "🇨🇦" },
   australia: { name: "Australia", currency: "AUD $", taxRate: 0.37, flag: "🇦🇺" },
-  eu: { name: "European Union", currency: "€", taxRate: 0.22, vatRate: 0.19, flag: "🇪🇺" },
+  eu: { name: "European Union", currency: "€", taxRate: 0.22, flag: "🇪🇺" },
   russia: { name: "Россия", currency: "₽", taxRate: 0.06, flag: "🇷🇺" },
   india: { name: "India", currency: "₹", taxRate: 0.3, flag: "🇮🇳" },
 };
@@ -75,7 +72,7 @@ const platforms = {
 
 const translations = {
   ru: {
-    title: "Income Tracker",
+    title: "TakeHomePro",
     subtitle: "Узнай свой реальный доход после налогов и комиссий",
     calcBtn: "Рассчитать",
     income: "Годовой доход",
@@ -91,11 +88,19 @@ const translations = {
     requiredRate: "Необходимая почасовая ставка",
     progressTitle: "Прогрессия дохода",
     compareTitle: "Сравнение по странам",
+    scenarioTitle: "Сравнение сценариев",
+    scenarioSubtitle: "Сравни до 3 сценариев с разными условиями",
+    addScenario: "Добавить сценарий",
+    removeScenario: "Удалить",
+    scenario: "Сценарий",
     hoursPerWeek: "Часов в неделю",
     weeksPerYear: "Недель в году",
+    net: "Нетто",
+    tax: "Налоги",
+    fee: "Комиссия",
   },
   en: {
-    title: "Income Tracker",
+    title: "TakeHomePro",
     subtitle: "Know your real income after taxes and platform fees",
     calcBtn: "Calculate",
     income: "Annual Income",
@@ -111,11 +116,19 @@ const translations = {
     requiredRate: "Required Hourly Rate",
     progressTitle: "Income Progression",
     compareTitle: "Country Comparison",
+    scenarioTitle: "Scenario Comparison",
+    scenarioSubtitle: "Compare up to 3 scenarios with different conditions",
+    addScenario: "Add Scenario",
+    removeScenario: "Remove",
+    scenario: "Scenario",
     hoursPerWeek: "Hours per week",
     weeksPerYear: "Weeks per year",
+    net: "Net",
+    tax: "Taxes",
+    fee: "Fee",
   },
   es: {
-    title: "Income Tracker",
+    title: "TakeHomePro",
     subtitle: "Conoce tus ingresos reales después de impuestos y comisiones",
     calcBtn: "Calcular",
     income: "Ingreso Anual",
@@ -131,11 +144,19 @@ const translations = {
     requiredRate: "Tarifa requerida",
     progressTitle: "Progresión de Ingresos",
     compareTitle: "Comparación por País",
+    scenarioTitle: "Comparación de Escenarios",
+    scenarioSubtitle: "Compara hasta 3 escenarios con diferentes condiciones",
+    addScenario: "Agregar Escenario",
+    removeScenario: "Quitar",
+    scenario: "Escenario",
     hoursPerWeek: "Horas por semana",
     weeksPerYear: "Semanas por año",
+    net: "Neto",
+    tax: "Impuestos",
+    fee: "Comisión",
   },
   de: {
-    title: "Income Tracker",
+    title: "TakeHomePro",
     subtitle: "Ihr reales Einkommen nach Steuern und Plattformgebühren",
     calcBtn: "Berechnen",
     income: "Jahreseinkommen",
@@ -151,11 +172,19 @@ const translations = {
     requiredRate: "Benötigter Stundensatz",
     progressTitle: "Einkommensprogression",
     compareTitle: "Ländervergleich",
+    scenarioTitle: "Szenariovergleich",
+    scenarioSubtitle: "Vergleiche bis zu 3 Szenarien mit verschiedenen Bedingungen",
+    addScenario: "Szenario hinzufügen",
+    removeScenario: "Entfernen",
+    scenario: "Szenario",
     hoursPerWeek: "Stunden pro Woche",
     weeksPerYear: "Wochen pro Jahr",
+    net: "Netto",
+    tax: "Steuern",
+    fee: "Gebühr",
   },
   fr: {
-    title: "Income Tracker",
+    title: "TakeHomePro",
     subtitle: "Connaissez votre revenu réel après impôts et commissions",
     calcBtn: "Calculer",
     income: "Revenu Annuel",
@@ -171,11 +200,19 @@ const translations = {
     requiredRate: "Taux horaire requis",
     progressTitle: "Progression des Revenus",
     compareTitle: "Comparaison par Pays",
+    scenarioTitle: "Comparaison de Scénarios",
+    scenarioSubtitle: "Comparez jusqu'à 3 scénarios avec des conditions différentes",
+    addScenario: "Ajouter un scénario",
+    removeScenario: "Supprimer",
+    scenario: "Scénario",
     hoursPerWeek: "Heures par semaine",
     weeksPerYear: "Semaines par an",
+    net: "Net",
+    tax: "Impôts",
+    fee: "Commission",
   },
   pt: {
-    title: "Income Tracker",
+    title: "TakeHomePro",
     subtitle: "Conheça sua renda real após impostos e taxas",
     calcBtn: "Calcular",
     income: "Renda Anual",
@@ -191,11 +228,19 @@ const translations = {
     requiredRate: "Taxa horária necessária",
     progressTitle: "Progressão de Renda",
     compareTitle: "Comparação por País",
+    scenarioTitle: "Comparação de Cenários",
+    scenarioSubtitle: "Compare até 3 cenários com condições diferentes",
+    addScenario: "Adicionar Cenário",
+    removeScenario: "Remover",
+    scenario: "Cenário",
     hoursPerWeek: "Horas por semana",
     weeksPerYear: "Semanas por ano",
+    net: "Líquido",
+    tax: "Impostos",
+    fee: "Taxa",
   },
   zh: {
-    title: "Income Tracker",
+    title: "TakeHomePro",
     subtitle: "了解您税后和平台费用后的真实收入",
     calcBtn: "计算",
     income: "年收入",
@@ -211,8 +256,16 @@ const translations = {
     requiredRate: "所需时薪",
     progressTitle: "收入进展",
     compareTitle: "国家对比",
+    scenarioTitle: "场景对比",
+    scenarioSubtitle: "比较最多3个不同条件的场景",
+    addScenario: "添加场景",
+    removeScenario: "删除",
+    scenario: "场景",
     hoursPerWeek: "每周工作小时",
     weeksPerYear: "每年工作周数",
+    net: "净收入",
+    tax: "税款",
+    fee: "费用",
   },
 };
 
@@ -225,6 +278,8 @@ const langOptions = [
   { code: "pt", label: "🇧🇷 PT" },
   { code: "zh", label: "🇨🇳 ZH" },
 ];
+
+const SCENARIO_COLORS = ["#00ff88", "#00ccff", "#ff6b6b"];
 
 function calculateTax(income, countryKey, platformKey) {
   const incomeNum = parseFloat(income) || 0;
@@ -248,7 +303,9 @@ function calculateTax(income, countryKey, platformKey) {
   return { grossIncome: incomeNum, platformFee, totalTax, netIncome, monthlyNet: netIncome / 12 };
 }
 
-export default function FreelanceTaxPro() {
+const defaultScenario = () => ({ income: "50000", country: "usa", platform: "upwork" });
+
+export default function TakeHomePro() {
   const [language, setLanguage] = useState("ru");
   const [income, setIncome] = useState("50000");
   const [platform, setPlatform] = useState("upwork");
@@ -259,6 +316,7 @@ export default function FreelanceTaxPro() {
   const [showResults, setShowResults] = useState(false);
   const [moneyRainActive, setMoneyRainActive] = useState(false);
   const [activeSection, setActiveSection] = useState("calculator");
+  const [scenarios, setScenarios] = useState([defaultScenario(), defaultScenario()]);
 
   useEffect(() => {
     const saved = localStorage.getItem("language") || "ru";
@@ -286,7 +344,6 @@ export default function FreelanceTaxPro() {
     const r = calculateTax(parseFloat(income) * mult, country, platform);
     return { label: `${c.currency}${(parseFloat(income) * mult / 1000).toFixed(0)}k`, net: r.netIncome };
   });
-
   const maxNet = Math.max(...progressionSteps.map((s) => s.net));
 
   const countryComparison = Object.entries(countries).map(([key, val]) => {
@@ -294,10 +351,25 @@ export default function FreelanceTaxPro() {
     return { key, flag: val.flag, name: val.name, currency: val.currency, net: r.netIncome };
   }).sort((a, b) => b.net - a.net);
 
+  const scenarioResults = scenarios.map((sc) => calculateTax(sc.income, sc.country, sc.platform));
+  const maxScenarioNet = Math.max(...scenarioResults.map((r) => r.netIncome), 1);
+
   const handleCalculate = () => {
     setShowResults(true);
     setMoneyRainActive(true);
     setTimeout(() => setMoneyRainActive(false), 4000);
+  };
+
+  const updateScenario = (index, field, value) => {
+    setScenarios((prev) => prev.map((sc, i) => i === index ? { ...sc, [field]: value } : sc));
+  };
+
+  const addScenario = () => {
+    if (scenarios.length < 3) setScenarios((prev) => [...prev, defaultScenario()]);
+  };
+
+  const removeScenario = (index) => {
+    if (scenarios.length > 1) setScenarios((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -323,46 +395,51 @@ export default function FreelanceTaxPro() {
         </div>
 
         <div className="section-tabs">
-          {["calculator", "reverse", "progression", "compare"].map((sec) => (
+          {[
+            { key: "calculator", icon: "🧮" },
+            { key: "scenarios", icon: "⚖️" },
+            { key: "reverse", icon: "🎯" },
+            { key: "progression", icon: "📈" },
+            { key: "compare", icon: "🌍" },
+          ].map((sec) => (
             <button
-              key={sec}
-              className={`tab-btn ${activeSection === sec ? "active" : ""}`}
-              onClick={() => setActiveSection(sec)}
+              key={sec.key}
+              className={`tab-btn ${activeSection === sec.key ? "active" : ""}`}
+              onClick={() => setActiveSection(sec.key)}
             >
-              {sec === "calculator" && "🧮"}
-              {sec === "reverse" && "🎯"}
-              {sec === "progression" && "📈"}
-              {sec === "compare" && "🌍"}
+              {sec.icon}
             </button>
           ))}
         </div>
 
         {activeSection === "calculator" && (
-          <div className="inputs-section fade-in-delay-1">
-            <div className="input-group">
-              <label>{t.country}</label>
-              <select value={country} onChange={(e) => setCountry(e.target.value)}>
-                {Object.entries(countries).map(([key, val]) => (
-                  <option key={key} value={key}>{val.flag} {val.name}</option>
-                ))}
-              </select>
-            </div>
-            <div className="input-group">
-              <label>{t.income} ({c.currency})</label>
-              <input type="number" value={income} onChange={(e) => setIncome(e.target.value)} />
-            </div>
-            <div className="input-group">
-              <label>{t.platform}</label>
-              <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
-                {Object.entries(platforms).map(([key, val]) => (
-                  <option key={key} value={key}>{val.name} ({(val.commission * 100).toFixed(0)}%)</option>
-                ))}
-              </select>
+          <div className="card fade-in-delay-1">
+            <div className="inputs-grid">
+              <div className="input-group">
+                <label>{t.country}</label>
+                <select value={country} onChange={(e) => setCountry(e.target.value)}>
+                  {Object.entries(countries).map(([key, val]) => (
+                    <option key={key} value={key}>{val.flag} {val.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="input-group">
+                <label>{t.income} ({c.currency})</label>
+                <input type="number" value={income} onChange={(e) => setIncome(e.target.value)} />
+              </div>
+              <div className="input-group">
+                <label>{t.platform}</label>
+                <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
+                  {Object.entries(platforms).map(([key, val]) => (
+                    <option key={key} value={key}>{val.name} ({(val.commission * 100).toFixed(0)}%)</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <button className="calculate-btn" onClick={handleCalculate}>{t.calcBtn} 🚀</button>
 
             {showResults && (
-              <div className="results-container fade-in">
+              <div className="results-box fade-in">
                 <div className="result-row">
                   <span>{t.grossIncome}</span>
                   <span className="result-value">{c.currency}<AnimatedNumber value={results.grossIncome} prefix="" /></span>
@@ -383,16 +460,29 @@ export default function FreelanceTaxPro() {
                   <span>{t.monthlyNet}</span>
                   <span className="result-value">{c.currency}<AnimatedNumber value={results.monthlyNet} prefix="" /></span>
                 </div>
-                <div className="pie-chart">
-                  <div className="pie-bar">
-                    <div className="pie-segment platform-seg" style={{ width: `${(results.platformFee / results.grossIncome) * 100}%` }} />
-                    <div className="pie-segment tax-seg" style={{ width: `${(results.totalTax / results.grossIncome) * 100}%` }} />
-                    <div className="pie-segment net-seg" style={{ width: `${(results.netIncome / results.grossIncome) * 100}%` }} />
+
+                <div className="breakdown-bar-wrap">
+                  <div className="breakdown-bar">
+                    <div
+                      className="breakdown-seg seg-net"
+                      style={{ width: `${(results.netIncome / results.grossIncome) * 100}%` }}
+                      title={`${t.net}: ${((results.netIncome / results.grossIncome) * 100).toFixed(1)}%`}
+                    />
+                    <div
+                      className="breakdown-seg seg-tax"
+                      style={{ width: `${(results.totalTax / results.grossIncome) * 100}%` }}
+                      title={`${t.taxes}: ${((results.totalTax / results.grossIncome) * 100).toFixed(1)}%`}
+                    />
+                    <div
+                      className="breakdown-seg seg-fee"
+                      style={{ width: `${(results.platformFee / results.grossIncome) * 100}%` }}
+                      title={`${t.fee}: ${((results.platformFee / results.grossIncome) * 100).toFixed(1)}%`}
+                    />
                   </div>
-                  <div className="pie-legend">
-                    <span className="legend-dot platform-dot" /> {t.platformFee}: {((results.platformFee / results.grossIncome) * 100).toFixed(1)}%
-                    <span className="legend-dot tax-dot" /> {t.taxes}: {((results.totalTax / results.grossIncome) * 100).toFixed(1)}%
-                    <span className="legend-dot net-dot" /> {t.netIncome}: {((results.netIncome / results.grossIncome) * 100).toFixed(1)}%
+                  <div className="breakdown-legend">
+                    <span><span className="leg-dot dot-net" />{t.net}: {((results.netIncome / results.grossIncome) * 100).toFixed(1)}%</span>
+                    <span><span className="leg-dot dot-tax" />{t.taxes}: {((results.totalTax / results.grossIncome) * 100).toFixed(1)}%</span>
+                    <span><span className="leg-dot dot-fee" />{t.fee}: {((results.platformFee / results.grossIncome) * 100).toFixed(1)}%</span>
                   </div>
                 </div>
               </div>
@@ -400,20 +490,118 @@ export default function FreelanceTaxPro() {
           </div>
         )}
 
+        {activeSection === "scenarios" && (
+          <div className="card fade-in-delay-1">
+            <h3 className="section-title">{t.scenarioTitle}</h3>
+            <p className="section-subtitle">{t.scenarioSubtitle}</p>
+
+            <div className="scenarios-grid">
+              {scenarios.map((sc, idx) => {
+                const res = scenarioResults[idx];
+                const scCountry = countries[sc.country];
+                const color = SCENARIO_COLORS[idx];
+                return (
+                  <div key={idx} className="scenario-card" style={{ borderColor: color }}>
+                    <div className="scenario-header" style={{ color }}>
+                      <span>{t.scenario} {idx + 1}</span>
+                      {scenarios.length > 1 && (
+                        <button className="remove-btn" onClick={() => removeScenario(idx)}>{t.removeScenario}</button>
+                      )}
+                    </div>
+                    <div className="input-group">
+                      <label>{t.country}</label>
+                      <select value={sc.country} onChange={(e) => updateScenario(idx, "country", e.target.value)}>
+                        {Object.entries(countries).map(([key, val]) => (
+                          <option key={key} value={key}>{val.flag} {val.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="input-group">
+                      <label>{t.income} ({scCountry.currency})</label>
+                      <input type="number" value={sc.income} onChange={(e) => updateScenario(idx, "income", e.target.value)} />
+                    </div>
+                    <div className="input-group">
+                      <label>{t.platform}</label>
+                      <select value={sc.platform} onChange={(e) => updateScenario(idx, "platform", e.target.value)}>
+                        {Object.entries(platforms).map(([key, val]) => (
+                          <option key={key} value={key}>{val.name} ({(val.commission * 100).toFixed(0)}%)</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="scenario-result">
+                      <div className="scenario-net" style={{ color }}>
+                        {scCountry.currency}{res.netIncome.toFixed(0)}
+                        <span className="scenario-net-label"> / {t.netIncome}</span>
+                      </div>
+                      <div className="scenario-monthly">
+                        {scCountry.currency}{res.monthlyNet.toFixed(0)} / {t.monthlyNet}
+                      </div>
+                    </div>
+
+                    <div className="breakdown-bar-wrap">
+                      <div className="breakdown-bar">
+                        <div
+                          className="breakdown-seg"
+                          style={{
+                            width: `${(res.netIncome / res.grossIncome) * 100}%`,
+                            background: color,
+                          }}
+                        />
+                        <div
+                          className="breakdown-seg seg-tax"
+                          style={{ width: `${(res.totalTax / res.grossIncome) * 100}%` }}
+                        />
+                        <div
+                          className="breakdown-seg seg-fee"
+                          style={{ width: `${(res.platformFee / res.grossIncome) * 100}%` }}
+                        />
+                      </div>
+                      <div className="breakdown-legend small">
+                        <span><span className="leg-dot" style={{ background: color }} />{t.net}: {((res.netIncome / res.grossIncome) * 100).toFixed(0)}%</span>
+                        <span><span className="leg-dot dot-tax" />{t.taxes}: {((res.totalTax / res.grossIncome) * 100).toFixed(0)}%</span>
+                        <span><span className="leg-dot dot-fee" />{t.fee}: {((res.platformFee / res.grossIncome) * 100).toFixed(0)}%</span>
+                      </div>
+                    </div>
+
+                    <div className="scenario-bar-wrap">
+                      <div
+                        className="scenario-bar-fill"
+                        style={{
+                          width: `${(res.netIncome / maxScenarioNet) * 100}%`,
+                          background: color,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {scenarios.length < 3 && (
+              <button className="add-scenario-btn" onClick={addScenario}>
+                + {t.addScenario}
+              </button>
+            )}
+          </div>
+        )}
+
         {activeSection === "reverse" && (
-          <div className="inputs-section fade-in-delay-1">
+          <div className="card fade-in-delay-1">
             <h3 className="section-title">{t.reverseTitle}</h3>
-            <div className="input-group">
-              <label>{t.desiredIncome} ({c.currency})</label>
-              <input type="number" value={desiredIncome} onChange={(e) => setDesiredIncome(e.target.value)} />
-            </div>
-            <div className="input-group">
-              <label>{t.hoursPerWeek}</label>
-              <input type="number" value={hoursPerWeek} onChange={(e) => setHoursPerWeek(e.target.value)} />
-            </div>
-            <div className="input-group">
-              <label>{t.weeksPerYear}</label>
-              <input type="number" value={weeksPerYear} onChange={(e) => setWeeksPerYear(e.target.value)} />
+            <div className="inputs-grid">
+              <div className="input-group">
+                <label>{t.desiredIncome} ({c.currency})</label>
+                <input type="number" value={desiredIncome} onChange={(e) => setDesiredIncome(e.target.value)} />
+              </div>
+              <div className="input-group">
+                <label>{t.hoursPerWeek}</label>
+                <input type="number" value={hoursPerWeek} onChange={(e) => setHoursPerWeek(e.target.value)} />
+              </div>
+              <div className="input-group">
+                <label>{t.weeksPerYear}</label>
+                <input type="number" value={weeksPerYear} onChange={(e) => setWeeksPerYear(e.target.value)} />
+              </div>
             </div>
             <div className="result-row positive main-result" style={{ marginTop: "20px" }}>
               <span>{t.requiredRate}</span>
@@ -423,7 +611,7 @@ export default function FreelanceTaxPro() {
         )}
 
         {activeSection === "progression" && (
-          <div className="inputs-section fade-in-delay-1">
+          <div className="card fade-in-delay-1">
             <h3 className="section-title">{t.progressTitle}</h3>
             <div className="progression-grid">
               {progressionSteps.map((step, i) => (
@@ -440,11 +628,13 @@ export default function FreelanceTaxPro() {
         )}
 
         {activeSection === "compare" && (
-          <div className="inputs-section fade-in-delay-1">
+          <div className="card fade-in-delay-1">
             <h3 className="section-title">{t.compareTitle}</h3>
-            <div className="input-group">
-              <label>{t.income}</label>
-              <input type="number" value={income} onChange={(e) => setIncome(e.target.value)} />
+            <div className="inputs-grid" style={{ marginBottom: "20px" }}>
+              <div className="input-group">
+                <label>{t.income}</label>
+                <input type="number" value={income} onChange={(e) => setIncome(e.target.value)} />
+              </div>
             </div>
             <div className="country-compare-list">
               {countryComparison.map((item, i) => (
@@ -464,6 +654,3 @@ export default function FreelanceTaxPro() {
     </div>
   );
 }
-```
-
-Вставь на GitHub → **App.jsx** → Edit → выдели всё (Ctrl+A) → вставь (Ctrl+V) → Commit. Потом Redeploy на Vercel. 🚀
