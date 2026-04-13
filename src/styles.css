@@ -615,6 +615,120 @@ body {
   text-align: right;
 }
 
+/* --- Multiple income sources --- */
+.sources-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.source-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 255, 136, 0.04);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.source-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #00ff88;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 60px;
+  white-space: nowrap;
+}
+
+.source-income {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 8px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  transition: all 0.3s;
+  min-width: 0;
+}
+
+.source-income:focus {
+  outline: none;
+  border-color: #00ff88;
+  box-shadow: 0 0 14px rgba(0, 255, 136, 0.35);
+  background: rgba(0, 255, 136, 0.08);
+}
+
+.source-platform {
+  flex: 1.2;
+  padding: 10px 12px;
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 8px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  transition: all 0.3s;
+  min-width: 0;
+  appearance: none;
+}
+
+.source-platform:focus {
+  outline: none;
+  border-color: #00ff88;
+  box-shadow: 0 0 14px rgba(0, 255, 136, 0.35);
+}
+
+.source-platform option {
+  background: #1a1a2e;
+  color: #fff;
+}
+
+.remove-source-btn {
+  background: rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  color: #ff6b6b;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.remove-source-btn:hover {
+  background: rgba(255, 107, 107, 0.3);
+  border-color: #ff6b6b;
+}
+
+.add-source-btn {
+  background: transparent;
+  border: 2px dashed rgba(0, 255, 136, 0.35);
+  color: #00ff88;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: center;
+}
+
+.add-source-btn:hover {
+  border-color: #00ff88;
+  background: rgba(0, 255, 136, 0.06);
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
   .app-title {
