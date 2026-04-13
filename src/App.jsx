@@ -70,6 +70,51 @@ const platforms = {
   guru: { name: "Guru", commission: 0.09 },
 };
 
+// Units of currency per 1 USD (approximate, April 2026)
+const fxRates = {
+  usd: 1,
+  eur: 0.92,
+  gbp: 0.79,
+  rub: 90,
+  cad: 1.38,
+  aud: 1.55,
+  inr: 83,
+  cny: 7.24,
+  brl: 5.05,
+  pln: 3.94,
+};
+
+const fxSymbols = {
+  usd: "$",
+  eur: "€",
+  gbp: "£",
+  rub: "₽",
+  cad: "CA$",
+  aud: "A$",
+  inr: "₹",
+  cny: "¥",
+  brl: "R$",
+  pln: "zł",
+};
+
+// Earning currency per tax country (used to convert net income to USD first)
+const countryEarningCurrency = {
+  usa: "usd",
+  uk: "gbp",
+  ireland: "eur",
+  canada: "cad",
+  australia: "aud",
+  eu: "eur",
+  russia: "rub",
+  india: "inr",
+};
+
+function convertCurrency(amount, fromCurrency, toCurrency) {
+  if (fromCurrency === toCurrency) return amount;
+  const inUsd = amount / fxRates[fromCurrency];
+  return inUsd * fxRates[toCurrency];
+}
+
 const translations = {
   ru: {
     title: "Income Tracker",
@@ -96,6 +141,9 @@ const translations = {
     addSource: "Добавить источник дохода",
     source: "Источник",
     totalPlatformFees: "Итого комиссии",
+    homeCurrency: "Домашняя валюта",
+    inYourCurrency: "В твоей валюте",
+    ratesNote: "Курсы приблизительные, апр. 2026",
   },
   en: {
     title: "Income Tracker",
@@ -122,6 +170,9 @@ const translations = {
     addSource: "Add income source",
     source: "Source",
     totalPlatformFees: "Total platform fees",
+    homeCurrency: "Home Currency",
+    inYourCurrency: "In your currency",
+    ratesNote: "Approximate rates, Apr. 2026",
   },
   es: {
     title: "Income Tracker",
@@ -148,6 +199,9 @@ const translations = {
     addSource: "Agregar fuente de ingresos",
     source: "Fuente",
     totalPlatformFees: "Total comisiones",
+    homeCurrency: "Moneda local",
+    inYourCurrency: "En tu moneda",
+    ratesNote: "Tasas aproximadas, abr. 2026",
   },
   de: {
     title: "Income Tracker",
@@ -174,6 +228,9 @@ const translations = {
     addSource: "Einkommensquelle hinzufügen",
     source: "Quelle",
     totalPlatformFees: "Gesamtgebühren",
+    homeCurrency: "Heimwährung",
+    inYourCurrency: "In deiner Währung",
+    ratesNote: "Ungefähre Kurse, Apr. 2026",
   },
   fr: {
     title: "Income Tracker",
@@ -200,6 +257,9 @@ const translations = {
     addSource: "Ajouter une source de revenus",
     source: "Source",
     totalPlatformFees: "Total commissions",
+    homeCurrency: "Devise locale",
+    inYourCurrency: "Dans ta devise",
+    ratesNote: "Taux approximatifs, avr. 2026",
   },
   pt: {
     title: "Income Tracker",
@@ -226,6 +286,9 @@ const translations = {
     addSource: "Adicionar fonte de renda",
     source: "Fonte",
     totalPlatformFees: "Total taxas",
+    homeCurrency: "Moeda local",
+    inYourCurrency: "Na sua moeda",
+    ratesNote: "Taxas aproximadas, abr. 2026",
   },
   zh: {
     title: "Income Tracker",
@@ -252,6 +315,9 @@ const translations = {
     addSource: "添加收入来源",
     source: "来源",
     totalPlatformFees: "总平台费用",
+    homeCurrency: "本地货币",
+    inYourCurrency: "换算后金额",
+    ratesNote: "汇率近似值，2026年4月",
   },
 };
 
@@ -323,6 +389,7 @@ export default function FreelanceTaxPro() {
   const [expenses, setExpenses] = useState("0");
   const [compareIncome, setCompareIncome] = useState("50000");
   const [revPlatform, setRevPlatform] = useState("upwork");
+  const [homeCurrency, setHomeCurrency] = useState("rub");
   const [desiredIncome, setDesiredIncome] = useState("60000");
   const [hoursPerWeek, setHoursPerWeek] = useState("40");
   const [weeksPerYear, setWeeksPerYear] = useState("48");
@@ -354,6 +421,12 @@ export default function FreelanceTaxPro() {
   const t = translations[language];
   const results = calculateMultiSource(sources, country, expenses);
   const c = countries[country];
+
+  const earningCurrency = countryEarningCurrency[country];
+  const convertedNet = convertCurrency(results.netIncome, earningCurrency, homeCurrency);
+  const convertedMonthly = convertCurrency(results.monthlyNet, earningCurrency, homeCurrency);
+  const homeSymbol = fxSymbols[homeCurrency];
+  const showConverter = homeCurrency !== earningCurrency;
   const rate = getTaxRate(country);
 
   // Reverse tab
@@ -481,6 +554,18 @@ export default function FreelanceTaxPro() {
               />
             </div>
 
+            {/* Home currency */}
+            <div className="input-group full-width">
+              <label>{t.homeCurrency}</label>
+              <select value={homeCurrency} onChange={(e) => setHomeCurrency(e.target.value)}>
+                {Object.entries(fxSymbols).map(([code, sym]) => (
+                  <option key={code} value={code}>
+                    {sym} {code.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <button className="calculate-btn full-width" onClick={handleCalculate}>
               {t.calcBtn} 🚀
             </button>
@@ -513,6 +598,22 @@ export default function FreelanceTaxPro() {
                   <span>{t.monthlyNet}</span>
                   <span className="result-value">{c.currency}<AnimatedNumber value={results.monthlyNet} prefix="" /></span>
                 </div>
+                {showConverter && (
+                  <div className="converter-block">
+                    <div className="converter-title">🌍 {t.inYourCurrency}</div>
+                    <div className="converter-amounts">
+                      <div className="converter-item">
+                        <span className="converter-label">{t.netIncome}</span>
+                        <span className="converter-value">{homeSymbol}<AnimatedNumber value={convertedNet} prefix="" decimals={0} /></span>
+                      </div>
+                      <div className="converter-item">
+                        <span className="converter-label">{t.monthlyNet}</span>
+                        <span className="converter-value">{homeSymbol}<AnimatedNumber value={convertedMonthly} prefix="" decimals={0} /></span>
+                      </div>
+                    </div>
+                    <div className="rates-note">* {t.ratesNote}</div>
+                  </div>
+                )}
                 <div className="pie-chart">
                   <div className="pie-bar">
                     <div className="pie-segment platform-seg" style={{ width: `${results.grossIncome > 0 ? (results.platformFee / results.grossIncome) * 100 : 0}%` }} />

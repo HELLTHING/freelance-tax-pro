@@ -729,6 +729,56 @@ body {
   grid-column: 1 / -1;
 }
 
+/* --- Currency converter block --- */
+.converter-block {
+  margin-top: 8px;
+  background: linear-gradient(135deg, rgba(0, 204, 255, 0.08), rgba(0, 255, 136, 0.06));
+  border: 1px solid rgba(0, 204, 255, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.converter-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #00ccff;
+  margin-bottom: 12px;
+  letter-spacing: 0.3px;
+}
+
+.converter-amounts {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.converter-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.converter-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.converter-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #00ccff;
+  text-shadow: 0 0 10px rgba(0, 204, 255, 0.4);
+}
+
+.rates-note {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
   .app-title {
