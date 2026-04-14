@@ -122,7 +122,7 @@ export default function TakeHomePro() {
   ];
 
   return (
-    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#0a0a1a 0%,#1a0a2e 40%,#0f1729 100%)",color:"#e2e8f0",fontFamily:"'DM Sans','Segoe UI',sans-serif",position:"relative"}}>
+    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#0a2e0a 0%,#0f3d0f 40%,#0a1f0a 100%)",color:"#e2e8f0",fontFamily:"'DM Sans','Segoe UI',sans-serif",position:"relative"}}>
       {rainDrops}
 
       {/* ХЕДЕР */}
