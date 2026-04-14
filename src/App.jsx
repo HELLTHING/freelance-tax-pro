@@ -1,656 +1,387 @@
-import React, { useState, useEffect } from "react";
-import "./styles.css";
+import { useState, useCallback } from "react";
 
-const AnimatedNumber = ({ value, prefix = "$", decimals = 2 }) => {
-  const [displayValue, setDisplayValue] = useState(0);
-  useEffect(() => {
-    let start = 0;
-    const end = parseFloat(value) || 0;
-    if (start === end) return;
-    const duration = 1200;
-    const increment = end / (duration / 16);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= end) {
-        setDisplayValue(end);
-        clearInterval(timer);
-      } else {
-        setDisplayValue(start);
-      }
-    }, 16);
-    return () => clearInterval(timer);
-  }, [value]);
-  return <>{prefix}{displayValue.toFixed(decimals)}</>;
+const STRIPE_LINK = "https://buy.stripe.com/your_link_here";
+const fmt = (n, sym) => `${sym}${Math.round(n).toLocaleString()}`;
+const pct = (n) => `${(n * 100).toFixed(1)}%`;
+
+const COUNTRIES = {
+  ireland:     { name:"Ireland",     flag:"🇮🇪", symbol:"€", calc:(g)=>{ let t=0,u=0,r=g; for(const [l,rt] of [[42000,.20],[Infinity,.40]]){const x=Math.min(r,l-(g-r));if(x<=0)break;t+=x*rt;r-=x;} r=g; for(const [l,rt] of [[12012,.005],[25760,.02],[70044,.04],[Infinity,.08]]){const x=Math.min(r,l-(g-r));if(x<=0)break;u+=x*rt;r-=x;} return {total:t+u+g*.04}; }},
+  usa:         { name:"USA",         flag:"🇺🇸", symbol:"$", calc:(g)=>{ let t=0,p=0; for(const [l,r] of [[11600,.10],[47150,.12],[100525,.22],[191950,.24],[243725,.32],[609350,.35],[Infinity,.37]]){const x=Math.min(g,l)-p;if(x<=0)break;t+=x*r;p=l;} return {total:t+g*.153}; }},
+  uk:          { name:"UK",          flag:"🇬🇧", symbol:"£", calc:(g)=>{ let t=0,p=0; for(const [l,r] of [[12570,0],[50270,.20],[125140,.40],[Infinity,.45]]){const x=Math.min(g,l)-p;if(x<=0)break;t+=x*r;p=l;} return {total:t+Math.max(0,Math.min(g,50270)-12570)*.08+Math.max(0,g-50270)*.02}; }},
+  germany:     { name:"Germany",     flag:"🇩🇪", symbol:"€", calc:(g)=>{ const t=g<=11604?0:g<=17005?(g-11604)*.14:g<=66760?(g-11604)*.26:g<=277825?(g-11604)*.35:(g-11604)*.42; return {total:t+g*.205}; }},
+  france:      { name:"France",      flag:"🇫🇷", symbol:"€", calc:(g)=>{ let t=0,p=0; for(const [l,r] of [[11294,0],[28797,.11],[82341,.30],[177106,.41],[Infinity,.45]]){const x=Math.min(g,l)-p;if(x<=0)break;t+=x*r;p=l;} return {total:t+g*.22}; }},
+  spain:       { name:"Spain",       flag:"🇪🇸", symbol:"€", calc:(g)=>{ let t=0,p=0; for(const [l,r] of [[12450,.19],[20200,.24],[35200,.30],[60000,.37],[300000,.45],[Infinity,.47]]){const x=Math.min(g,l)-p;if(x<=0)break;t+=x*r;p=l;} return {total:t+g*.065}; }},
+  netherlands: { name:"Netherlands", flag:"🇳🇱", symbol:"€", calc:(g)=>{ let t=0,p=0; for(const [l,r] of [[75518,.3693],[Infinity,.495]]){const x=Math.min(g,l)-p;if(x<=0)break;t+=x*r;p=l;} return {total:t}; }},
+  portugal:    { name:"Portugal",    flag:"🇵🇹", symbol:"€", calc:(g)=>{ let t=0,p=0; for(const [l,r] of [[7703,.1325],[11623,.18],[16472,.23],[21321,.26],[27146,.3275],[39791,.37],[51997,.435],[81199,.45],[Infinity,.48]]){const x=Math.min(g,l)-p;if(x<=0)break;t+=x*r;p=l;} return {total:t+g*.214}; }},
+  ukraine:     { name:"Ukraine",     flag:"🇺🇦", symbol:"₴", calc:(g)=>({ total:g*.415 }) },
+  poland:      { name:"Poland",      flag:"🇵🇱", symbol:"zł",calc:(g)=>{ let t=0,p=0; for(const [l,r] of [[120000,.12],[Infinity,.32]]){const x=Math.min(g,l)-p;if(x<=0)break;t+=x*r;p=l;} return {total:t+g*.1371}; }},
+  canada:      { name:"Canada",      flag:"🇨🇦", symbol:"C$",calc:(g)=>{ let t=0,p=0; for(const [l,r] of [[55867,.15],[111733,.205],[154906,.26],[220000,.29],[Infinity,.33]]){const x=Math.min(g,l)-p;if(x<=0)break;t+=x*r;p=l;} return {total:t+Math.min(g*.0595,3867)+Math.min(g*.0166,1049)}; }},
+  italy:       { name:"Italy",       flag:"🇮🇹", symbol:"€", calc:(g)=>{ let t=0,p=0; for(const [l,r] of [[28000,.23],[50000,.35],[Infinity,.43]]){const x=Math.min(g,l)-p;if(x<=0)break;t+=x*r;p=l;} return {total:t+g*.259}; }},
 };
 
-const MoneyRain = ({ isActive }) => {
-  const [moneys, setMoneys] = useState([]);
-  useEffect(() => {
-    if (!isActive) return;
-    const interval = setInterval(() => {
-      const newMoney = {
-        id: Math.random(),
-        left: Math.random() * 100,
-        amount: [1, 5, 10, 20, 50][Math.floor(Math.random() * 5)],
-      };
-      setMoneys((prev) => [...prev, newMoney]);
-      setTimeout(() => {
-        setMoneys((prev) => prev.filter((m) => m.id !== newMoney.id));
-      }, 3000);
-    }, 300);
-    return () => clearInterval(interval);
-  }, [isActive]);
-  return (
-    <div className="money-rain">
-      {moneys.map((money) => (
-        <div key={money.id} className="money-drop" style={{ left: `${money.left}%` }}>
-          💵 ${money.amount}
-        </div>
-      ))}
-    </div>
-  );
+const PLATFORMS = {
+  none:       { name:"Direct",         fee:0     },
+  upwork:     { name:"Upwork",         fee:0.10  },
+  fiverr:     { name:"Fiverr",         fee:0.20  },
+  toptal:     { name:"Toptal",         fee:0     },
+  freelancer: { name:"Freelancer.com", fee:0.10  },
+  deel:       { name:"Deel",           fee:0     },
+  wise:       { name:"Wise",           fee:0.005 },
 };
 
-const countries = {
-  usa: { name: "United States", currency: "$", taxRate: 0.25, seTaxRate: 0.153, stateAvg: 0.05, flag: "🇺🇸" },
-  uk: { name: "United Kingdom", currency: "£", taxRate: 0.2, niRate: 0.08, flag: "🇬🇧" },
-  ireland: { name: "Ireland", currency: "€", taxRate: 0.4, prsiRate: 0.04, uscRate: 0.08, flag: "🇮🇪" },
-  canada: { name: "Canada", currency: "CAD $", taxRate: 0.25, provAvg: 0.08, flag: "🇨🇦" },
-  australia: { name: "Australia", currency: "AUD $", taxRate: 0.37, flag: "🇦🇺" },
-  eu: { name: "European Union", currency: "€", taxRate: 0.22, flag: "🇪🇺" },
-  russia: { name: "Россия", currency: "₽", taxRate: 0.06, flag: "🇷🇺" },
-  india: { name: "India", currency: "₹", taxRate: 0.3, flag: "🇮🇳" },
+const LANGS = {
+  en: { flag:"🇬🇧", label:"English",    gross:"Annual Gross",         country:"Country",  platform:"Platform",  calculate:"Calculate",   net:"Net Income",      taxes:"Total Taxes",    platformFee:"Platform Fee", effectiveRate:"Effective Rate", monthly:"Monthly",     weekly:"Weekly",      daily:"Daily",       rateFinder:"Rate Finder",   rateQ:"Desired annual net?",      rateA:"You need to charge", perHour:"per hour",   perMonth:"per month",  growth:"Income Growth",  growthStart:"Starting Income", growthGoal:"Goal Income", years:"years to goal",    compare:"Compare Countries", addCountry:"Add Country", compare3:"Compare up to 3 countries", history:"History",     noHistory:"No calculations yet",    clearHistory:"Clear",    premium:"PRO", premiumTitle:"Unlock Pro",        premiumSub:"Get the full picture",    premiumCta:"Subscribe — $4.99/mo",    premiumF1:"PDF Reports",          premiumF2:"Calculation History", premiumF3:"Multi-Country Compare", premiumF4:"30+ Countries",    premiumF5:"Tax Tips & Alerts",  freeLabel:"Free",        proLabel:"Pro",  secure:"Secure payment via Stripe"       },
+  ru: { flag:"🇷🇺", label:"Русский",    gross:"Годовой доход (брутто)", country:"Страна",   platform:"Платформа", calculate:"Рассчитать",  net:"Чистый доход",    taxes:"Всего налогов",  platformFee:"Комиссия",     effectiveRate:"Эффект. ставка",monthly:"В месяц",     weekly:"В неделю",    daily:"В день",      rateFinder:"Подбор ставки", rateQ:"Желаемый чистый доход?",   rateA:"Нужно брать",        perHour:"в час",      perMonth:"в месяц",    growth:"Рост дохода",    growthStart:"Стартовый доход", growthGoal:"Целевой доход",years:"лет до цели",      compare:"Сравнить страны",   addCountry:"Добавить",    compare3:"Сравните до 3 стран",       history:"История",     noHistory:"Пока нет расчётов",      clearHistory:"Очистить", premium:"ПРО", premiumTitle:"Премиум доступ",    premiumSub:"Полная картина доходов",  premiumCta:"Подписка — $4.99/мес",    premiumF1:"PDF отчёты",           premiumF2:"История расчётов",    premiumF3:"Сравнение стран",       premiumF4:"30+ стран",        premiumF5:"Налоговые советы",   freeLabel:"Бесплатно",   proLabel:"Про",  secure:"Безопасная оплата через Stripe"  },
+  uk: { flag:"🇺🇦", label:"Українська", gross:"Річний дохід (брутто)", country:"Країна",   platform:"Платформа", calculate:"Розрахувати", net:"Чистий дохід",    taxes:"Всього податків",platformFee:"Комісія",      effectiveRate:"Ефект. ставка", monthly:"На місяць",   weekly:"На тиждень",  daily:"На день",     rateFinder:"Підбір ставки", rateQ:"Бажаний чистий дохід?",    rateA:"Потрібно брати",     perHour:"на годину",  perMonth:"на місяць",  growth:"Зростання",      growthStart:"Початковий дохід",growthGoal:"Цільовий дохід",years:"років до цілі",    compare:"Порівняти країни",  addCountry:"Додати",      compare3:"Порівняйте до 3 країн",     history:"Історія",     noHistory:"Поки немає розрахунків",clearHistory:"Очистити", premium:"ПРО", premiumTitle:"Преміум доступ",    premiumSub:"Повна картина доходів",   premiumCta:"Підписка — $4.99/міс",    premiumF1:"PDF звіти",            premiumF2:"Історія розрахунків", premiumF3:"Порівняння країн",      premiumF4:"30+ країн",        premiumF5:"Податкові поради",   freeLabel:"Безкоштовно", proLabel:"Про",  secure:"Безпечна оплата через Stripe"    },
+  de: { flag:"🇩🇪", label:"Deutsch",    gross:"Jahresbruttoeinkommen", country:"Land",     platform:"Plattform", calculate:"Berechnen",   net:"Nettoeinkommen",  taxes:"Steuern gesamt", platformFee:"Gebühr",       effectiveRate:"Effektiv",      monthly:"Monatlich",   weekly:"Wöchentlich", daily:"Täglich",     rateFinder:"Stundensatz",   rateQ:"Gewünschtes Netto?",       rateA:"Du musst verlangen", perHour:"pro Stunde", perMonth:"pro Monat",  growth:"Einkommenswachstum",growthStart:"Startgehalt",     growthGoal:"Zielgehalt",  years:"Jahre",            compare:"Länder vergleichen",addCountry:"Hinzufügen",  compare3:"Bis zu 3 Länder vergleichen",history:"Verlauf",     noHistory:"Noch keine Berechnungen",clearHistory:"Löschen",  premium:"PRO", premiumTitle:"Premium freischalten",premiumSub:"Das volle Bild",          premiumCta:"Upgrade — $4.99/Mo",      premiumF1:"PDF Berichte",         premiumF2:"Berechnungsverlauf",  premiumF3:"Ländervergleich",       premiumF4:"30+ Länder",       premiumF5:"Steuertipps",        freeLabel:"Kostenlos",   proLabel:"Pro",  secure:"Sichere Zahlung via Stripe"      },
+  es: { flag:"🇪🇸", label:"Español",    gross:"Ingreso bruto anual",   country:"País",     platform:"Plataforma",calculate:"Calcular",    net:"Ingreso neto",    taxes:"Impuestos",      platformFee:"Comisión",     effectiveRate:"Tasa efectiva", monthly:"Mensual",     weekly:"Semanal",     daily:"Diario",      rateFinder:"Tarifa",        rateQ:"¿Neto deseado?",           rateA:"Debes cobrar",       perHour:"por hora",   perMonth:"por mes",    growth:"Crecimiento",    growthStart:"Ingreso inicial", growthGoal:"Meta",        years:"años",             compare:"Comparar países",   addCountry:"Agregar",     compare3:"Compara hasta 3 países",    history:"Historial",   noHistory:"Sin cálculos aún",       clearHistory:"Borrar",   premium:"PRO", premiumTitle:"Desbloquear Premium", premiumSub:"La imagen completa",      premiumCta:"Suscribirse — $4.99/mes", premiumF1:"Informes PDF",         premiumF2:"Historial",           premiumF3:"Comparar países",       premiumF4:"30+ países",       premiumF5:"Consejos fiscales",  freeLabel:"Gratis",      proLabel:"Pro",  secure:"Pago seguro via Stripe"          },
+  fr: { flag:"🇫🇷", label:"Français",   gross:"Revenu brut annuel",    country:"Pays",     platform:"Plateforme",calculate:"Calculer",    net:"Revenu net",      taxes:"Impôts totaux",  platformFee:"Commission",   effectiveRate:"Taux effectif", monthly:"Mensuel",     weekly:"Hebdo",       daily:"Journalier",  rateFinder:"Tarif",         rateQ:"Net souhaité?",            rateA:"Vous devez facturer",perHour:"par heure",  perMonth:"par mois",   growth:"Croissance",     growthStart:"Revenu initial",  growthGoal:"Objectif",    years:"ans",              compare:"Comparer",          addCountry:"Ajouter",     compare3:"Comparez jusqu'à 3 pays",   history:"Historique",  noHistory:"Aucun calcul",           clearHistory:"Effacer",  premium:"PRO", premiumTitle:"Débloquer Premium",   premiumSub:"Vue complète",            premiumCta:"S'abonner — 4,99$/mois",  premiumF1:"Rapports PDF",         premiumF2:"Historique",          premiumF3:"Comparer pays",         premiumF4:"30+ pays",         premiumF5:"Conseils fiscaux",   freeLabel:"Gratuit",     proLabel:"Pro",  secure:"Paiement sécurisé via Stripe"    },
+  pt: { flag:"🇵🇹", label:"Português",  gross:"Rendimento bruto anual",country:"País",     platform:"Plataforma",calculate:"Calcular",    net:"Rendimento líq.", taxes:"Impostos totais",platformFee:"Comissão",     effectiveRate:"Taxa efetiva",  monthly:"Mensal",      weekly:"Semanal",     daily:"Diário",      rateFinder:"Tarifa",        rateQ:"Líquido desejado?",        rateA:"Deve cobrar",        perHour:"por hora",   perMonth:"por mês",    growth:"Crescimento",    growthStart:"Rend. inicial",   growthGoal:"Meta",        years:"anos",             compare:"Comparar",          addCountry:"Adicionar",   compare3:"Compare até 3 países",      history:"Histórico",   noHistory:"Sem cálculos",           clearHistory:"Limpar",   premium:"PRO", premiumTitle:"Premium",             premiumSub:"Visão completa",          premiumCta:"Assinar — $4.99/mês",     premiumF1:"Relatórios PDF",       premiumF2:"Histórico",           premiumF3:"Comparar países",       premiumF4:"30+ países",       premiumF5:"Dicas fiscais",      freeLabel:"Grátis",      proLabel:"Pro",  secure:"Pagamento seguro via Stripe"     },
+  nl: { flag:"🇳🇱", label:"Nederlands", gross:"Jaarlijks bruto inkomen",country:"Land",    platform:"Platform",  calculate:"Berekenen",   net:"Netto inkomen",   taxes:"Totale belasting",platformFee:"Kosten",       effectiveRate:"Effectief",     monthly:"Maandelijks", weekly:"Wekelijks",   daily:"Dagelijks",   rateFinder:"Uurtarief",     rateQ:"Gewenst netto?",           rateA:"Je moet vragen",     perHour:"per uur",    perMonth:"per maand",  growth:"Groei",          growthStart:"Startinkomen",    growthGoal:"Doel",        years:"jaar",             compare:"Vergelijken",       addCountry:"Toevoegen",   compare3:"Vergelijk tot 3 landen",    history:"Geschiedenis",noHistory:"Nog geen berekeningen",  clearHistory:"Wissen",   premium:"PRO", premiumTitle:"Premium ontgrendelen",premiumSub:"Het volledige beeld",      premiumCta:"Abonneren — $4.99/ma",    premiumF1:"PDF Rapporten",        premiumF2:"Geschiedenis",        premiumF3:"Landen vergelijken",    premiumF4:"30+ landen",       premiumF5:"Belastingtips",      freeLabel:"Gratis",      proLabel:"Pro",  secure:"Veilige betaling via Stripe"     },
+  it: { flag:"🇮🇹", label:"Italiano",   gross:"Reddito lordo annuale", country:"Paese",    platform:"Piattaforma",calculate:"Calcola",     net:"Reddito netto",   taxes:"Tasse totali",   platformFee:"Commissione",  effectiveRate:"Aliquota eff.", monthly:"Mensile",     weekly:"Settimanale", daily:"Giornaliero", rateFinder:"Tariffa",       rateQ:"Netto desiderato?",        rateA:"Devi chiedere",      perHour:"all'ora",    perMonth:"al mese",    growth:"Crescita",       growthStart:"Reddito iniziale",growthGoal:"Obiettivo",   years:"anni",             compare:"Confronta",         addCountry:"Aggiungi",    compare3:"Confronta fino a 3 paesi",  history:"Cronologia",  noHistory:"Nessun calcolo",         clearHistory:"Cancella", premium:"PRO", premiumTitle:"Sblocca Premium",     premiumSub:"Il quadro completo",      premiumCta:"Abbonati — $4.99/mese",   premiumF1:"Report PDF",           premiumF2:"Cronologia",          premiumF3:"Confronta paesi",       premiumF4:"30+ paesi",        premiumF5:"Consigli fiscali",   freeLabel:"Gratis",      proLabel:"Pro",  secure:"Pagamento sicuro via Stripe"     },
 };
 
-const platforms = {
-  upwork: { name: "Upwork", commission: 0.05 },
-  fiverr: { name: "Fiverr", commission: 0.2 },
-  freelancer: { name: "Freelancer.com", commission: 0.1 },
-  direct: { name: "Direct Clients", commission: 0 },
-  guru: { name: "Guru", commission: 0.09 },
+const S = {
+  card:  { background:"rgba(255,255,255,0.04)", borderRadius:16, padding:20, border:"1px solid rgba(255,255,255,0.07)", marginBottom:16 },
+  label: { display:"block", fontSize:"0.75rem", fontWeight:600, color:"rgba(255,255,255,0.5)", marginBottom:6, marginTop:14 },
+  input: { width:"100%", padding:"11px 14px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, color:"#fff", fontSize:"0.95rem", outline:"none", fontFamily:"inherit", boxSizing:"border-box" },
+  btn:   { width:"100%", padding:13, background:"linear-gradient(135deg,#7c3aed,#2563eb)", border:"none", borderRadius:12, color:"#fff", fontSize:"0.95rem", fontWeight:800, cursor:"pointer", marginTop:16, fontFamily:"inherit" },
 };
-
-const translations = {
-  ru: {
-    title: "TakeHomePro",
-    subtitle: "Узнай свой реальный доход после налогов и комиссий",
-    calcBtn: "Рассчитать",
-    income: "Годовой доход",
-    platform: "Платформа",
-    country: "Страна",
-    grossIncome: "Валовый доход",
-    platformFee: "Комиссия платформы",
-    taxes: "Налоги",
-    netIncome: "Чистый доход",
-    monthlyNet: "В месяц",
-    reverseTitle: "Обратный расчёт ставки",
-    desiredIncome: "Желаемый годовой доход",
-    requiredRate: "Необходимая почасовая ставка",
-    progressTitle: "Прогрессия дохода",
-    compareTitle: "Сравнение по странам",
-    scenarioTitle: "Сравнение сценариев",
-    scenarioSubtitle: "Сравни до 3 сценариев с разными условиями",
-    addScenario: "Добавить сценарий",
-    removeScenario: "Удалить",
-    scenario: "Сценарий",
-    hoursPerWeek: "Часов в неделю",
-    weeksPerYear: "Недель в году",
-    net: "Нетто",
-    tax: "Налоги",
-    fee: "Комиссия",
-  },
-  en: {
-    title: "TakeHomePro",
-    subtitle: "Know your real income after taxes and platform fees",
-    calcBtn: "Calculate",
-    income: "Annual Income",
-    platform: "Platform",
-    country: "Country",
-    grossIncome: "Gross Income",
-    platformFee: "Platform Fee",
-    taxes: "Taxes",
-    netIncome: "Net Income",
-    monthlyNet: "Monthly",
-    reverseTitle: "Reverse Rate Calculator",
-    desiredIncome: "Desired Annual Income",
-    requiredRate: "Required Hourly Rate",
-    progressTitle: "Income Progression",
-    compareTitle: "Country Comparison",
-    scenarioTitle: "Scenario Comparison",
-    scenarioSubtitle: "Compare up to 3 scenarios with different conditions",
-    addScenario: "Add Scenario",
-    removeScenario: "Remove",
-    scenario: "Scenario",
-    hoursPerWeek: "Hours per week",
-    weeksPerYear: "Weeks per year",
-    net: "Net",
-    tax: "Taxes",
-    fee: "Fee",
-  },
-  es: {
-    title: "TakeHomePro",
-    subtitle: "Conoce tus ingresos reales después de impuestos y comisiones",
-    calcBtn: "Calcular",
-    income: "Ingreso Anual",
-    platform: "Plataforma",
-    country: "País",
-    grossIncome: "Ingreso Bruto",
-    platformFee: "Comisión",
-    taxes: "Impuestos",
-    netIncome: "Ingreso Neto",
-    monthlyNet: "Mensual",
-    reverseTitle: "Calculadora Inversa",
-    desiredIncome: "Ingreso deseado",
-    requiredRate: "Tarifa requerida",
-    progressTitle: "Progresión de Ingresos",
-    compareTitle: "Comparación por País",
-    scenarioTitle: "Comparación de Escenarios",
-    scenarioSubtitle: "Compara hasta 3 escenarios con diferentes condiciones",
-    addScenario: "Agregar Escenario",
-    removeScenario: "Quitar",
-    scenario: "Escenario",
-    hoursPerWeek: "Horas por semana",
-    weeksPerYear: "Semanas por año",
-    net: "Neto",
-    tax: "Impuestos",
-    fee: "Comisión",
-  },
-  de: {
-    title: "TakeHomePro",
-    subtitle: "Ihr reales Einkommen nach Steuern und Plattformgebühren",
-    calcBtn: "Berechnen",
-    income: "Jahreseinkommen",
-    platform: "Plattform",
-    country: "Land",
-    grossIncome: "Bruttoeinkommen",
-    platformFee: "Plattformgebühr",
-    taxes: "Steuern",
-    netIncome: "Nettoeinkommen",
-    monthlyNet: "Monatlich",
-    reverseTitle: "Umgekehrte Berechnung",
-    desiredIncome: "Gewünschtes Einkommen",
-    requiredRate: "Benötigter Stundensatz",
-    progressTitle: "Einkommensprogression",
-    compareTitle: "Ländervergleich",
-    scenarioTitle: "Szenariovergleich",
-    scenarioSubtitle: "Vergleiche bis zu 3 Szenarien mit verschiedenen Bedingungen",
-    addScenario: "Szenario hinzufügen",
-    removeScenario: "Entfernen",
-    scenario: "Szenario",
-    hoursPerWeek: "Stunden pro Woche",
-    weeksPerYear: "Wochen pro Jahr",
-    net: "Netto",
-    tax: "Steuern",
-    fee: "Gebühr",
-  },
-  fr: {
-    title: "TakeHomePro",
-    subtitle: "Connaissez votre revenu réel après impôts et commissions",
-    calcBtn: "Calculer",
-    income: "Revenu Annuel",
-    platform: "Plateforme",
-    country: "Pays",
-    grossIncome: "Revenu Brut",
-    platformFee: "Commission",
-    taxes: "Impôts",
-    netIncome: "Revenu Net",
-    monthlyNet: "Mensuel",
-    reverseTitle: "Calcul Inverse",
-    desiredIncome: "Revenu souhaité",
-    requiredRate: "Taux horaire requis",
-    progressTitle: "Progression des Revenus",
-    compareTitle: "Comparaison par Pays",
-    scenarioTitle: "Comparaison de Scénarios",
-    scenarioSubtitle: "Comparez jusqu'à 3 scénarios avec des conditions différentes",
-    addScenario: "Ajouter un scénario",
-    removeScenario: "Supprimer",
-    scenario: "Scénario",
-    hoursPerWeek: "Heures par semaine",
-    weeksPerYear: "Semaines par an",
-    net: "Net",
-    tax: "Impôts",
-    fee: "Commission",
-  },
-  pt: {
-    title: "TakeHomePro",
-    subtitle: "Conheça sua renda real após impostos e taxas",
-    calcBtn: "Calcular",
-    income: "Renda Anual",
-    platform: "Plataforma",
-    country: "País",
-    grossIncome: "Renda Bruta",
-    platformFee: "Taxa da Plataforma",
-    taxes: "Impostos",
-    netIncome: "Renda Líquida",
-    monthlyNet: "Mensal",
-    reverseTitle: "Cálculo Inverso",
-    desiredIncome: "Renda desejada",
-    requiredRate: "Taxa horária necessária",
-    progressTitle: "Progressão de Renda",
-    compareTitle: "Comparação por País",
-    scenarioTitle: "Comparação de Cenários",
-    scenarioSubtitle: "Compare até 3 cenários com condições diferentes",
-    addScenario: "Adicionar Cenário",
-    removeScenario: "Remover",
-    scenario: "Cenário",
-    hoursPerWeek: "Horas por semana",
-    weeksPerYear: "Semanas por ano",
-    net: "Líquido",
-    tax: "Impostos",
-    fee: "Taxa",
-  },
-  zh: {
-    title: "TakeHomePro",
-    subtitle: "了解您税后和平台费用后的真实收入",
-    calcBtn: "计算",
-    income: "年收入",
-    platform: "平台",
-    country: "国家",
-    grossIncome: "总收入",
-    platformFee: "平台费用",
-    taxes: "税款",
-    netIncome: "净收入",
-    monthlyNet: "月收入",
-    reverseTitle: "反向费率计算",
-    desiredIncome: "期望年收入",
-    requiredRate: "所需时薪",
-    progressTitle: "收入进展",
-    compareTitle: "国家对比",
-    scenarioTitle: "场景对比",
-    scenarioSubtitle: "比较最多3个不同条件的场景",
-    addScenario: "添加场景",
-    removeScenario: "删除",
-    scenario: "场景",
-    hoursPerWeek: "每周工作小时",
-    weeksPerYear: "每年工作周数",
-    net: "净收入",
-    tax: "税款",
-    fee: "费用",
-  },
-};
-
-const langOptions = [
-  { code: "ru", label: "🇷🇺 RU" },
-  { code: "en", label: "🇬🇧 EN" },
-  { code: "es", label: "🇪🇸 ES" },
-  { code: "de", label: "🇩🇪 DE" },
-  { code: "fr", label: "🇫🇷 FR" },
-  { code: "pt", label: "🇧🇷 PT" },
-  { code: "zh", label: "🇨🇳 ZH" },
-];
-
-const SCENARIO_COLORS = ["#00ff88", "#00ccff", "#ff6b6b"];
-
-function calculateTax(income, countryKey, platformKey) {
-  const incomeNum = parseFloat(income) || 0;
-  const c = countries[countryKey];
-  const p = platforms[platformKey];
-  const platformFee = incomeNum * p.commission;
-  const afterPlatform = incomeNum - platformFee;
-  let totalTax = 0;
-
-  if (countryKey === "usa") {
-    totalTax = afterPlatform * (c.taxRate + c.seTaxRate + c.stateAvg);
-  } else if (countryKey === "uk") {
-    totalTax = afterPlatform * (c.taxRate + c.niRate);
-  } else if (countryKey === "ireland") {
-    totalTax = afterPlatform * (c.taxRate + c.prsiRate + c.uscRate);
-  } else {
-    totalTax = afterPlatform * c.taxRate;
-  }
-
-  const netIncome = afterPlatform - totalTax;
-  return { grossIncome: incomeNum, platformFee, totalTax, netIncome, monthlyNet: netIncome / 12 };
-}
-
-const defaultScenario = () => ({ income: "50000", country: "usa", platform: "upwork" });
 
 export default function TakeHomePro() {
-  const [language, setLanguage] = useState("ru");
-  const [income, setIncome] = useState("50000");
-  const [platform, setPlatform] = useState("upwork");
-  const [country, setCountry] = useState("usa");
-  const [desiredIncome, setDesiredIncome] = useState("60000");
-  const [hoursPerWeek, setHoursPerWeek] = useState("40");
-  const [weeksPerYear, setWeeksPerYear] = useState("48");
-  const [showResults, setShowResults] = useState(false);
-  const [moneyRainActive, setMoneyRainActive] = useState(false);
-  const [activeSection, setActiveSection] = useState("calculator");
-  const [scenarios, setScenarios] = useState([defaultScenario(), defaultScenario()]);
+  const [lang, setLang] = useState("ru");
+  const [tab, setTab] = useState("calc");
+  const [gross, setGross] = useState("");
+  const [country, setCountry] = useState("ireland");
+  const [platform, setPlatform] = useState("none");
+  const [results, setResults] = useState(null);
+  const [rain, setRain] = useState(false);
+  const [showPremium, setShowPremium] = useState(false);
+  const [showLang, setShowLang] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [desiredNet, setDesiredNet] = useState("");
+  const [rateCountry, setRateCountry] = useState("ireland");
+  const [rateResult, setRateResult] = useState(null);
+  const [growthStart, setGrowthStart] = useState("");
+  const [growthGoal, setGrowthGoal] = useState("");
+  const [growthRate, setGrowthRate] = useState(10);
+  const [growthData, setGrowthData] = useState(null);
+  const [compareCountries, setCompareCountries] = useState(["ireland","usa"]);
+  const [compareGross, setCompareGross] = useState("");
+  const [compareResults, setCompareResults] = useState(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("language") || "ru";
-    setLanguage(saved);
-  }, []);
+  const t = LANGS[lang] || LANGS.ru;
 
-  useEffect(() => {
-    localStorage.setItem("language", language);
-  }, [language]);
+  const calculate = useCallback(() => {
+    const g = parseFloat(gross); if (!g || g <= 0) return;
+    const c = COUNTRIES[country]; const p = PLATFORMS[platform];
+    const fee = g * p.fee; const after = g - fee;
+    const td = c.calc(after);
+    const net = after - td.total;
+    const r = { gross:g, net, taxes:td.total, platformFee:fee, effectiveRate:td.total/g, monthly:net/12, weekly:net/52, daily:net/260, flag:c.flag, country:c.name, symbol:c.symbol, platform:p.name };
+    setResults(r); setRain(true); setTimeout(()=>setRain(false), 3000);
+    setHistory(prev => [{...r, date:new Date().toLocaleDateString(), id:Date.now()}, ...prev].slice(0, 20));
+  }, [gross, country, platform]);
 
-  const t = translations[language];
-  const results = calculateTax(income, country, platform);
-  const c = countries[country];
+  const calcRate = useCallback(() => {
+    const desired = parseFloat(desiredNet); if (!desired) return;
+    const c = COUNTRIES[rateCountry];
+    let lo = desired, hi = desired * 5;
+    for (let i = 0; i < 60; i++) { const mid = (lo+hi)/2; if (mid - c.calc(mid).total < desired) lo = mid; else hi = mid; }
+    const needed = (lo+hi)/2;
+    setRateResult({ gross:needed, hourly:needed/2080, monthly:needed/12, symbol:c.symbol });
+  }, [desiredNet, rateCountry]);
 
-  const totalHours = parseFloat(hoursPerWeek) * parseFloat(weeksPerYear) || 1;
-  const platformMultiplier = 1 / (1 - platforms[platform].commission);
-  let taxMultiplier = 1;
-  if (country === "usa") taxMultiplier = 1 / (1 - (countries.usa.taxRate + countries.usa.seTaxRate + countries.usa.stateAvg));
-  else if (country === "uk") taxMultiplier = 1 / (1 - (countries.uk.taxRate + countries.uk.niRate));
-  else if (country === "ireland") taxMultiplier = 1 / (1 - (countries.ireland.taxRate + countries.ireland.prsiRate + countries.ireland.uscRate));
-  else taxMultiplier = 1 / (1 - countries[country].taxRate);
-  const requiredHourlyRate = ((parseFloat(desiredIncome) || 0) / totalHours) * platformMultiplier * taxMultiplier;
+  const calcGrowth = useCallback(() => {
+    const s = parseFloat(growthStart), g = parseFloat(growthGoal);
+    if (!s || !g || g <= s) return;
+    const years = Math.log(g/s) / Math.log(1 + growthRate/100);
+    const data = [];
+    for (let y = 0; y <= Math.ceil(years); y++) data.push({ year:y, income:Math.round(s * Math.pow(1+growthRate/100, y)) });
+    setGrowthData({ years:years.toFixed(1), data });
+  }, [growthStart, growthGoal, growthRate]);
 
-  const progressionSteps = [0.25, 0.5, 0.75, 1.0, 1.5, 2.0].map((mult) => {
-    const r = calculateTax(parseFloat(income) * mult, country, platform);
-    return { label: `${c.currency}${(parseFloat(income) * mult / 1000).toFixed(0)}k`, net: r.netIncome };
-  });
-  const maxNet = Math.max(...progressionSteps.map((s) => s.net));
+  const calcCompare = useCallback(() => {
+    const g = parseFloat(compareGross); if (!g) return;
+    setCompareResults(compareCountries.map(ck => {
+      const c = COUNTRIES[ck]; const td = c.calc(g);
+      return { key:ck, name:c.name, flag:c.flag, symbol:c.symbol, gross:g, taxes:td.total, net:g-td.total, rate:td.total/g };
+    }));
+  }, [compareGross, compareCountries]);
 
-  const countryComparison = Object.entries(countries).map(([key, val]) => {
-    const r = calculateTax(income, key, platform);
-    return { key, flag: val.flag, name: val.name, currency: val.currency, net: r.netIncome };
-  }).sort((a, b) => b.net - a.net);
+  const rainDrops = rain ? Array.from({length:15}, (_,i) => (
+    <div key={i} style={{position:"fixed",top:-30,left:`${Math.random()*100}%`,fontSize:"1.4rem",animation:`moneyFall 2.5s ${Math.random()*1.5}s ease-in forwards`,pointerEvents:"none",zIndex:9999}}>💰</div>
+  )) : null;
 
-  const scenarioResults = scenarios.map((sc) => calculateTax(sc.income, sc.country, sc.platform));
-  const maxScenarioNet = Math.max(...scenarioResults.map((r) => r.netIncome), 1);
-
-  const handleCalculate = () => {
-    setShowResults(true);
-    setMoneyRainActive(true);
-    setTimeout(() => setMoneyRainActive(false), 4000);
-  };
-
-  const updateScenario = (index, field, value) => {
-    setScenarios((prev) => prev.map((sc, i) => i === index ? { ...sc, [field]: value } : sc));
-  };
-
-  const addScenario = () => {
-    if (scenarios.length < 3) setScenarios((prev) => [...prev, defaultScenario()]);
-  };
-
-  const removeScenario = (index) => {
-    if (scenarios.length > 1) setScenarios((prev) => prev.filter((_, i) => i !== index));
-  };
+  const tabs = [
+    {id:"calc",   icon:"🧮", label:t.calculate},
+    {id:"rate",   icon:"🎯", label:t.rateFinder},
+    {id:"growth", icon:"📈", label:t.growth},
+    {id:"compare",icon:"🌍", label:t.compare},
+    {id:"history",icon:"📋", label:t.history},
+  ];
 
   return (
-    <div className="app">
-      <div className="animated-bg" />
-      <MoneyRain isActive={moneyRainActive} />
+    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#0a0a1a 0%,#1a0a2e 40%,#0f1729 100%)",color:"#e2e8f0",fontFamily:"'DM Sans','Segoe UI',sans-serif",position:"relative"}}>
+      {rainDrops}
 
-      <div className="container">
-        <div className="header fade-in">
-          <div className="lang-switcher">
-            {langOptions.map((l) => (
-              <button
-                key={l.code}
-                className={`lang-btn ${language === l.code ? "active" : ""}`}
-                onClick={() => setLanguage(l.code)}
-              >
-                {l.label}
-              </button>
-            ))}
-          </div>
-          <h1 className="app-title">💰 {t.title}</h1>
-          <p className="app-subtitle">{t.subtitle}</p>
+      {/* ХЕДЕР */}
+      <header style={{padding:"20px 20px 0",display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative",zIndex:10}}>
+        <div>
+          <h1 style={{margin:0,fontSize:"1.6rem",fontWeight:900,background:"linear-gradient(135deg,#a78bfa,#60a5fa,#34d399)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>
+            ⚡ TakeHome Pro
+          </h1>
+          <p style={{margin:"2px 0 0",fontSize:"0.8rem",color:"rgba(255,255,255,0.4)"}}>{t.gross}</p>
         </div>
-
-        <div className="section-tabs">
-          {[
-            { key: "calculator", icon: "🧮" },
-            { key: "scenarios", icon: "⚖️" },
-            { key: "reverse", icon: "🎯" },
-            { key: "progression", icon: "📈" },
-            { key: "compare", icon: "🌍" },
-          ].map((sec) => (
-            <button
-              key={sec.key}
-              className={`tab-btn ${activeSection === sec.key ? "active" : ""}`}
-              onClick={() => setActiveSection(sec.key)}
-            >
-              {sec.icon}
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{position:"relative"}}>
+            <button onClick={()=>setShowLang(!showLang)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,padding:"6px 10px",color:"#fff",fontSize:"0.85rem",cursor:"pointer"}}>
+              {LANGS[lang].flag}
             </button>
-          ))}
-        </div>
-
-        {activeSection === "calculator" && (
-          <div className="card fade-in-delay-1">
-            <div className="inputs-grid">
-              <div className="input-group">
-                <label>{t.country}</label>
-                <select value={country} onChange={(e) => setCountry(e.target.value)}>
-                  {Object.entries(countries).map(([key, val]) => (
-                    <option key={key} value={key}>{val.flag} {val.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="input-group">
-                <label>{t.income} ({c.currency})</label>
-                <input type="number" value={income} onChange={(e) => setIncome(e.target.value)} />
-              </div>
-              <div className="input-group">
-                <label>{t.platform}</label>
-                <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
-                  {Object.entries(platforms).map(([key, val]) => (
-                    <option key={key} value={key}>{val.name} ({(val.commission * 100).toFixed(0)}%)</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <button className="calculate-btn" onClick={handleCalculate}>{t.calcBtn} 🚀</button>
-
-            {showResults && (
-              <div className="results-box fade-in">
-                <div className="result-row">
-                  <span>{t.grossIncome}</span>
-                  <span className="result-value">{c.currency}<AnimatedNumber value={results.grossIncome} prefix="" /></span>
-                </div>
-                <div className="result-row negative">
-                  <span>{t.platformFee} ({(platforms[platform].commission * 100).toFixed(0)}%)</span>
-                  <span className="result-value">-{c.currency}<AnimatedNumber value={results.platformFee} prefix="" /></span>
-                </div>
-                <div className="result-row negative">
-                  <span>{t.taxes}</span>
-                  <span className="result-value">-{c.currency}<AnimatedNumber value={results.totalTax} prefix="" /></span>
-                </div>
-                <div className="result-row positive main-result">
-                  <span>{t.netIncome} 🎉</span>
-                  <span className="result-value">{c.currency}<AnimatedNumber value={results.netIncome} prefix="" /></span>
-                </div>
-                <div className="result-row monthly">
-                  <span>{t.monthlyNet}</span>
-                  <span className="result-value">{c.currency}<AnimatedNumber value={results.monthlyNet} prefix="" /></span>
-                </div>
-
-                <div className="breakdown-bar-wrap">
-                  <div className="breakdown-bar">
-                    <div
-                      className="breakdown-seg seg-net"
-                      style={{ width: `${(results.netIncome / results.grossIncome) * 100}%` }}
-                      title={`${t.net}: ${((results.netIncome / results.grossIncome) * 100).toFixed(1)}%`}
-                    />
-                    <div
-                      className="breakdown-seg seg-tax"
-                      style={{ width: `${(results.totalTax / results.grossIncome) * 100}%` }}
-                      title={`${t.taxes}: ${((results.totalTax / results.grossIncome) * 100).toFixed(1)}%`}
-                    />
-                    <div
-                      className="breakdown-seg seg-fee"
-                      style={{ width: `${(results.platformFee / results.grossIncome) * 100}%` }}
-                      title={`${t.fee}: ${((results.platformFee / results.grossIncome) * 100).toFixed(1)}%`}
-                    />
-                  </div>
-                  <div className="breakdown-legend">
-                    <span><span className="leg-dot dot-net" />{t.net}: {((results.netIncome / results.grossIncome) * 100).toFixed(1)}%</span>
-                    <span><span className="leg-dot dot-tax" />{t.taxes}: {((results.totalTax / results.grossIncome) * 100).toFixed(1)}%</span>
-                    <span><span className="leg-dot dot-fee" />{t.fee}: {((results.platformFee / results.grossIncome) * 100).toFixed(1)}%</span>
-                  </div>
-                </div>
+            {showLang && (
+              <div style={{position:"absolute",top:"110%",right:0,background:"#1e1b3a",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:6,zIndex:100,display:"flex",flexWrap:"wrap",gap:4,width:190}}>
+                {Object.entries(LANGS).map(([k,v]) => (
+                  <button key={k} onClick={()=>{setLang(k);setShowLang(false);}}
+                    style={{background:lang===k?"rgba(139,92,246,0.3)":"transparent",border:"none",borderRadius:8,padding:"5px 8px",color:"#fff",fontSize:"0.8rem",cursor:"pointer",flex:"1 0 45%"}}>
+                    {v.flag} {v.label}
+                  </button>
+                ))}
               </div>
             )}
           </div>
-        )}
+          <button onClick={()=>setShowPremium(true)} style={{background:"linear-gradient(135deg,#7c3aed,#2563eb)",border:"none",borderRadius:10,padding:"6px 14px",color:"#fff",fontSize:"0.78rem",fontWeight:700,cursor:"pointer"}}>
+            ⚡ {t.premium}
+          </button>
+        </div>
+      </header>
 
-        {activeSection === "scenarios" && (
-          <div className="card fade-in-delay-1">
-            <h3 className="section-title">{t.scenarioTitle}</h3>
-            <p className="section-subtitle">{t.scenarioSubtitle}</p>
+      {/* ТАБЫ */}
+      <nav style={{display:"flex",gap:4,padding:"16px 20px 0",overflowX:"auto",position:"relative",zIndex:10}}>
+        {tabs.map(tb => (
+          <button key={tb.id} onClick={()=>setTab(tb.id)}
+            style={{background:tab===tb.id?"rgba(139,92,246,0.25)":"rgba(255,255,255,0.04)",border:tab===tb.id?"1px solid rgba(139,92,246,0.5)":"1px solid rgba(255,255,255,0.06)",borderRadius:10,padding:"8px 12px",color:tab===tb.id?"#c4b5fd":"rgba(255,255,255,0.5)",fontSize:"0.75rem",fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>
+            {tb.icon} {tb.label}
+          </button>
+        ))}
+      </nav>
 
-            <div className="scenarios-grid">
-              {scenarios.map((sc, idx) => {
-                const res = scenarioResults[idx];
-                const scCountry = countries[sc.country];
-                const color = SCENARIO_COLORS[idx];
-                return (
-                  <div key={idx} className="scenario-card" style={{ borderColor: color }}>
-                    <div className="scenario-header" style={{ color }}>
-                      <span>{t.scenario} {idx + 1}</span>
-                      {scenarios.length > 1 && (
-                        <button className="remove-btn" onClick={() => removeScenario(idx)}>{t.removeScenario}</button>
-                      )}
-                    </div>
-                    <div className="input-group">
-                      <label>{t.country}</label>
-                      <select value={sc.country} onChange={(e) => updateScenario(idx, "country", e.target.value)}>
-                        {Object.entries(countries).map(([key, val]) => (
-                          <option key={key} value={key}>{val.flag} {val.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="input-group">
-                      <label>{t.income} ({scCountry.currency})</label>
-                      <input type="number" value={sc.income} onChange={(e) => updateScenario(idx, "income", e.target.value)} />
-                    </div>
-                    <div className="input-group">
-                      <label>{t.platform}</label>
-                      <select value={sc.platform} onChange={(e) => updateScenario(idx, "platform", e.target.value)}>
-                        {Object.entries(platforms).map(([key, val]) => (
-                          <option key={key} value={key}>{val.name} ({(val.commission * 100).toFixed(0)}%)</option>
-                        ))}
-                      </select>
-                    </div>
+      {/* КОНТЕНТ */}
+      <main style={{padding:"16px 20px 100px",maxWidth:600,margin:"0 auto",position:"relative",zIndex:10}}>
 
-                    <div className="scenario-result">
-                      <div className="scenario-net" style={{ color }}>
-                        {scCountry.currency}{res.netIncome.toFixed(0)}
-                        <span className="scenario-net-label"> / {t.netIncome}</span>
-                      </div>
-                      <div className="scenario-monthly">
-                        {scCountry.currency}{res.monthlyNet.toFixed(0)} / {t.monthlyNet}
-                      </div>
-                    </div>
+        {/* КАЛЬКУЛЯТОР */}
+        {tab==="calc" && <div>
+          <div style={S.card}>
+            <label style={S.label}>{t.country}</label>
+            <select value={country} onChange={e=>setCountry(e.target.value)} style={S.input}>
+              {Object.entries(COUNTRIES).map(([k,v]) => <option key={k} value={k}>{v.flag} {v.name}</option>)}
+            </select>
+            <label style={S.label}>{t.gross}</label>
+            <input type="number" value={gross} onChange={e=>setGross(e.target.value)} placeholder="50000" style={S.input}/>
+            <label style={S.label}>{t.platform}</label>
+            <select value={platform} onChange={e=>setPlatform(e.target.value)} style={S.input}>
+              {Object.entries(PLATFORMS).map(([k,v]) => <option key={k} value={k}>{v.name}{v.fee?` (${v.fee*100}%)`:"  ✓"}</option>)}
+            </select>
+            <button onClick={calculate} style={S.btn}>{t.calculate} 🚀</button>
+          </div>
 
-                    <div className="breakdown-bar-wrap">
-                      <div className="breakdown-bar">
-                        <div
-                          className="breakdown-seg"
-                          style={{
-                            width: `${(res.netIncome / res.grossIncome) * 100}%`,
-                            background: color,
-                          }}
-                        />
-                        <div
-                          className="breakdown-seg seg-tax"
-                          style={{ width: `${(res.totalTax / res.grossIncome) * 100}%` }}
-                        />
-                        <div
-                          className="breakdown-seg seg-fee"
-                          style={{ width: `${(res.platformFee / res.grossIncome) * 100}%` }}
-                        />
-                      </div>
-                      <div className="breakdown-legend small">
-                        <span><span className="leg-dot" style={{ background: color }} />{t.net}: {((res.netIncome / res.grossIncome) * 100).toFixed(0)}%</span>
-                        <span><span className="leg-dot dot-tax" />{t.taxes}: {((res.totalTax / res.grossIncome) * 100).toFixed(0)}%</span>
-                        <span><span className="leg-dot dot-fee" />{t.fee}: {((res.platformFee / res.grossIncome) * 100).toFixed(0)}%</span>
-                      </div>
-                    </div>
+          {results && <div style={S.card}>
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.4)",marginBottom:4}}>{results.flag} {results.country} • {results.platform}</div>
+              <div style={{fontSize:"2.2rem",fontWeight:900,background:"linear-gradient(135deg,#34d399,#60a5fa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>
+                {fmt(results.net, results.symbol)}
+              </div>
+              <div style={{fontSize:"0.8rem",color:"rgba(255,255,255,0.4)"}}>{t.net}</div>
+            </div>
 
-                    <div className="scenario-bar-wrap">
-                      <div
-                        className="scenario-bar-fill"
-                        style={{
-                          width: `${(res.netIncome / maxScenarioNet) * 100}%`,
-                          background: color,
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
+            {/* Визуальная полоса net / taxes / fee */}
+            <div style={{borderRadius:8,height:28,overflow:"hidden",marginBottom:12,display:"flex"}}>
+              <div style={{width:`${(results.net/results.gross)*100}%`,background:"linear-gradient(90deg,#34d399,#60a5fa)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:700,color:"#0a0a1a"}}>
+                {pct(results.net/results.gross)}
+              </div>
+              <div style={{width:`${(results.taxes/results.gross)*100}%`,background:"rgba(239,68,68,0.6)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:700}}>
+                {pct(results.taxes/results.gross)}
+              </div>
+              {results.platformFee>0 && <div style={{flex:1,background:"rgba(245,158,11,0.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"0.65rem",fontWeight:700}}>
+                {pct(results.platformFee/results.gross)}
+              </div>}
+            </div>
+            <div style={{display:"flex",gap:12,fontSize:"0.7rem",color:"rgba(255,255,255,0.5)",marginBottom:16}}>
+              <span>🟢 {t.net}</span><span>🔴 {t.taxes}</span>{results.platformFee>0&&<span>🟡 {t.platformFee}</span>}
+            </div>
+
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              {[[t.taxes,fmt(results.taxes,results.symbol),"#ef4444"],[t.platformFee,fmt(results.platformFee,results.symbol),"#f59e0b"],[t.monthly,fmt(results.monthly,results.symbol),"#60a5fa"],[t.weekly,fmt(results.weekly,results.symbol),"#a78bfa"],[t.daily,fmt(results.daily,results.symbol),"#34d399"],[t.effectiveRate,pct(results.effectiveRate),"#f472b6"]].map(([lbl,val,clr],i)=>(
+                <div key={i} style={{background:"rgba(255,255,255,0.03)",borderRadius:10,padding:"10px 12px",border:"1px solid rgba(255,255,255,0.05)"}}>
+                  <div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)",marginBottom:2}}>{lbl}</div>
+                  <div style={{fontSize:"1rem",fontWeight:700,color:clr}}>{val}</div>
+                </div>
+              ))}
+            </div>
+          </div>}
+        </div>}
+
+        {/* ПОДБОР СТАВКИ */}
+        {tab==="rate" && <div>
+          <div style={S.card}>
+            <label style={S.label}>{t.rateQ}</label>
+            <input type="number" value={desiredNet} onChange={e=>setDesiredNet(e.target.value)} placeholder="40000" style={S.input}/>
+            <label style={S.label}>{t.country}</label>
+            <select value={rateCountry} onChange={e=>setRateCountry(e.target.value)} style={S.input}>
+              {Object.entries(COUNTRIES).map(([k,v]) => <option key={k} value={k}>{v.flag} {v.name}</option>)}
+            </select>
+            <button onClick={calcRate} style={S.btn}>🎯 {t.calculate}</button>
+          </div>
+          {rateResult && <div style={S.card}>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.4)"}}>{t.rateA}</div>
+              <div style={{fontSize:"2rem",fontWeight:900,color:"#f59e0b",margin:"8px 0"}}>{fmt(rateResult.gross,rateResult.symbol)}/yr</div>
+              <div style={{display:"flex",justifyContent:"center",gap:24,marginTop:12}}>
+                <div>
+                  <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)"}}>{t.perHour}</div>
+                  <div style={{fontSize:"1.2rem",fontWeight:700,color:"#60a5fa"}}>{fmt(rateResult.hourly,rateResult.symbol)}</div>
+                </div>
+                <div>
+                  <div style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.4)"}}>{t.perMonth}</div>
+                  <div style={{fontSize:"1.2rem",fontWeight:700,color:"#a78bfa"}}>{fmt(rateResult.monthly,rateResult.symbol)}</div>
+                </div>
+              </div>
+            </div>
+          </div>}
+        </div>}
+
+        {/* РОСТ ДОХОДА */}
+        {tab==="growth" && <div>
+          <div style={S.card}>
+            <label style={S.label}>{t.growthStart}</label>
+            <input type="number" value={growthStart} onChange={e=>setGrowthStart(e.target.value)} placeholder="30000" style={S.input}/>
+            <label style={S.label}>{t.growthGoal}</label>
+            <input type="number" value={growthGoal} onChange={e=>setGrowthGoal(e.target.value)} placeholder="100000" style={S.input}/>
+            <label style={S.label}>📈 {growthRate}% / год</label>
+            <input type="range" min={5} max={50} value={growthRate} onChange={e=>setGrowthRate(+e.target.value)} style={{width:"100%",accentColor:"#7c3aed",marginTop:6}}/>
+            <button onClick={calcGrowth} style={S.btn}>📈 {t.calculate}</button>
+          </div>
+          {growthData && <div style={S.card}>
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontSize:"2rem",fontWeight:900,color:"#34d399"}}>{growthData.years}</div>
+              <div style={{fontSize:"0.8rem",color:"rgba(255,255,255,0.4)"}}>{t.years}</div>
+            </div>
+            <div style={{display:"flex",alignItems:"flex-end",gap:3,height:100}}>
+              {growthData.data.map((d,i)=>{
+                const maxI = growthData.data[growthData.data.length-1].income;
+                return <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center"}}>
+                  <div style={{width:"100%",height:`${(d.income/maxI)*100}%`,background:"linear-gradient(180deg,#7c3aed,#2563eb)",borderRadius:"4px 4px 0 0",minHeight:4}}/>
+                  <div style={{fontSize:"0.5rem",color:"rgba(255,255,255,0.3)",marginTop:2}}>Y{d.year}</div>
+                </div>;
               })}
             </div>
+          </div>}
+        </div>}
 
-            {scenarios.length < 3 && (
-              <button className="add-scenario-btn" onClick={addScenario}>
-                + {t.addScenario}
-              </button>
-            )}
+        {/* СРАВНЕНИЕ СТРАН */}
+        {tab==="compare" && <div>
+          <div style={S.card}>
+            <label style={S.label}>{t.gross}</label>
+            <input type="number" value={compareGross} onChange={e=>setCompareGross(e.target.value)} placeholder="60000" style={S.input}/>
+            <label style={S.label}>{t.compare3}</label>
+            {compareCountries.map((ck,i)=>(
+              <div key={i} style={{display:"flex",gap:8,marginBottom:8}}>
+                <select value={ck} onChange={e=>{const n=[...compareCountries];n[i]=e.target.value;setCompareCountries(n);}} style={{...S.input,marginBottom:0,flex:1}}>
+                  {Object.entries(COUNTRIES).map(([k,v])=><option key={k} value={k}>{v.flag} {v.name}</option>)}
+                </select>
+                {compareCountries.length>2 && <button onClick={()=>setCompareCountries(compareCountries.filter((_,j)=>j!==i))} style={{background:"rgba(239,68,68,0.2)",border:"none",borderRadius:8,padding:"0 10px",color:"#ef4444",cursor:"pointer"}}>✕</button>}
+              </div>
+            ))}
+            {compareCountries.length<3 && <button onClick={()=>setCompareCountries([...compareCountries,"uk"])} style={{...S.btn,background:"rgba(255,255,255,0.06)",color:"#a78bfa",marginBottom:8,marginTop:8,border:"1px solid rgba(139,92,246,0.3)"}}>+ {t.addCountry}</button>}
+            <button onClick={calcCompare} style={S.btn}>🌍 {t.compare}</button>
           </div>
-        )}
-
-        {activeSection === "reverse" && (
-          <div className="card fade-in-delay-1">
-            <h3 className="section-title">{t.reverseTitle}</h3>
-            <div className="inputs-grid">
-              <div className="input-group">
-                <label>{t.desiredIncome} ({c.currency})</label>
-                <input type="number" value={desiredIncome} onChange={(e) => setDesiredIncome(e.target.value)} />
+          {compareResults && compareResults.map((r,i)=>(
+            <div key={i} style={{...S.card,border:`1px solid ${i===0?"rgba(52,211,153,0.4)":"rgba(255,255,255,0.07)"}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span style={{fontSize:"1rem",fontWeight:700}}>{r.flag} {r.name}</span>
+                <span style={{fontSize:"0.75rem",color:"rgba(255,255,255,0.4)"}}>{t.effectiveRate}: {pct(r.rate)}</span>
               </div>
-              <div className="input-group">
-                <label>{t.hoursPerWeek}</label>
-                <input type="number" value={hoursPerWeek} onChange={(e) => setHoursPerWeek(e.target.value)} />
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:10}}>
+                <div>
+                  <div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)"}}>{t.net}</div>
+                  <div style={{fontSize:"1.3rem",fontWeight:800,color:"#34d399"}}>{fmt(r.net,r.symbol)}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:"0.65rem",color:"rgba(255,255,255,0.4)"}}>{t.taxes}</div>
+                  <div style={{fontSize:"1.1rem",fontWeight:700,color:"#ef4444"}}>{fmt(r.taxes,r.symbol)}</div>
+                </div>
               </div>
-              <div className="input-group">
-                <label>{t.weeksPerYear}</label>
-                <input type="number" value={weeksPerYear} onChange={(e) => setWeeksPerYear(e.target.value)} />
+              <div style={{background:"rgba(255,255,255,0.05)",borderRadius:6,height:8,marginTop:10,overflow:"hidden"}}>
+                <div style={{width:`${(r.net/r.gross)*100}%`,height:"100%",background:"linear-gradient(90deg,#34d399,#60a5fa)",borderRadius:6}}/>
               </div>
             </div>
-            <div className="result-row positive main-result" style={{ marginTop: "20px" }}>
-              <span>{t.requiredRate}</span>
-              <span className="result-value">{c.currency}{requiredHourlyRate.toFixed(2)}/hr</span>
-            </div>
-          </div>
-        )}
+          ))}
+        </div>}
 
-        {activeSection === "progression" && (
-          <div className="card fade-in-delay-1">
-            <h3 className="section-title">{t.progressTitle}</h3>
-            <div className="progression-grid">
-              {progressionSteps.map((step, i) => (
-                <div key={i} className="progression-card">
-                  <div className="prog-label">{step.label}</div>
-                  <div className="prog-bar-wrap">
-                    <div className="prog-bar-fill" style={{ height: `${(step.net / maxNet) * 100}%` }} />
+        {/* ИСТОРИЯ */}
+        {tab==="history" && <div>
+          {history.length===0
+            ? <div style={{...S.card,textAlign:"center",color:"rgba(255,255,255,0.3)",padding:40}}><div style={{fontSize:"2rem",marginBottom:8}}>📋</div>{t.noHistory}</div>
+            : <>
+              <button onClick={()=>setHistory([])} style={{...S.btn,background:"rgba(239,68,68,0.15)",color:"#ef4444",border:"1px solid rgba(239,68,68,0.2)"}}>🗑 {t.clearHistory}</button>
+              {history.map((h)=>(
+                <div key={h.id} style={S.card}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:"0.75rem",color:"rgba(255,255,255,0.4)",marginBottom:6}}>
+                    <span>{h.flag} {h.country} • {h.platform}</span><span>{h.date}</span>
                   </div>
-                  <div className="prog-net">{c.currency}{(step.net / 1000).toFixed(1)}k</div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+                    <span style={{color:"rgba(255,255,255,0.5)",fontSize:"0.85rem"}}>{fmt(h.gross,h.symbol)}</span>
+                    <span style={{fontSize:"0.7rem",color:"rgba(255,255,255,0.3)"}}>→</span>
+                    <span style={{fontSize:"1.2rem",fontWeight:800,color:"#34d399"}}>{fmt(h.net,h.symbol)}</span>
+                  </div>
                 </div>
               ))}
-            </div>
-          </div>
-        )}
+            </>
+          }
+        </div>}
 
-        {activeSection === "compare" && (
-          <div className="card fade-in-delay-1">
-            <h3 className="section-title">{t.compareTitle}</h3>
-            <div className="inputs-grid" style={{ marginBottom: "20px" }}>
-              <div className="input-group">
-                <label>{t.income}</label>
-                <input type="number" value={income} onChange={(e) => setIncome(e.target.value)} />
+      </main>
+
+      {/* PREMIUM МОДАЛ */}
+      {showPremium && (
+        <div onClick={()=>setShowPremium(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(8px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"linear-gradient(135deg,#1e1b3a,#0f1729)",borderRadius:20,padding:28,maxWidth:400,width:"100%",border:"1px solid rgba(139,92,246,0.3)"}}>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:"2.5rem"}}>⚡</div>
+              <h2 style={{margin:"8px 0 0",fontSize:"1.4rem",fontWeight:900,background:"linear-gradient(135deg,#a78bfa,#60a5fa)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{t.premiumTitle}</h2>
+              <p style={{color:"rgba(255,255,255,0.4)",fontSize:"0.85rem",margin:"4px 0 0"}}>{t.premiumSub}</p>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+              <div style={{background:"rgba(255,255,255,0.04)",borderRadius:14,padding:16,border:"1px solid rgba(255,255,255,0.06)"}}>
+                <div style={{fontSize:"0.7rem",fontWeight:700,color:"rgba(255,255,255,0.4)",marginBottom:6,textTransform:"uppercase"}}>{t.freeLabel}</div>
+                <div style={{fontSize:"1.2rem",fontWeight:900,marginBottom:12}}>$0</div>
+                {["✅ "+t.calculate,"✅ "+t.rateFinder,"✅ 12 "+t.country,"❌ "+t.premiumF1,"❌ "+t.premiumF2,"❌ "+t.premiumF5].map((f,i)=>(
+                  <div key={i} style={{fontSize:"0.72rem",color:"rgba(255,255,255,0.5)",marginBottom:5}}>{f}</div>
+                ))}
+              </div>
+              <div style={{background:"linear-gradient(135deg,rgba(139,92,246,0.2),rgba(59,130,246,0.15))",borderRadius:14,padding:16,border:"1px solid rgba(139,92,246,0.4)",position:"relative"}}>
+                <div style={{position:"absolute",top:-8,right:10,background:"linear-gradient(135deg,#f59e0b,#ef4444)",color:"#fff",fontSize:"0.6rem",fontWeight:900,padding:"2px 8px",borderRadius:20}}>BEST</div>
+                <div style={{fontSize:"0.7rem",fontWeight:700,color:"rgba(255,255,255,0.4)",marginBottom:6,textTransform:"uppercase"}}>{t.proLabel}</div>
+                <div style={{fontSize:"1.2rem",fontWeight:900,marginBottom:12}}>$4.99/mo</div>
+                {[t.premiumF1,t.premiumF2,t.premiumF3,t.premiumF4,t.premiumF5].map((f,i)=>(
+                  <div key={i} style={{fontSize:"0.72rem",color:"rgba(255,255,255,0.7)",marginBottom:5}}>✅ {f}</div>
+                ))}
               </div>
             </div>
-            <div className="country-compare-list">
-              {countryComparison.map((item, i) => (
-                <div key={item.key} className={`country-row ${item.key === country ? "active-country" : ""}`}>
-                  <span className="rank">#{i + 1}</span>
-                  <span className="country-flag">{item.flag} {item.name}</span>
-                  <div className="country-bar-wrap">
-                    <div className="country-bar-fill" style={{ width: `${(item.net / countryComparison[0].net) * 100}%` }} />
-                  </div>
-                  <span className="country-net">{item.currency}{item.net.toFixed(0)}</span>
-                </div>
-              ))}
-            </div>
+            <a href={STRIPE_LINK} target="_blank" rel="noopener noreferrer" style={{display:"block",width:"100%",padding:14,background:"linear-gradient(135deg,#7c3aed,#2563eb)",borderRadius:12,color:"#fff",fontSize:"1rem",fontWeight:800,textAlign:"center",textDecoration:"none",boxSizing:"border-box"}}>
+              {t.premiumCta}
+            </a>
+            <p style={{textAlign:"center",fontSize:"0.7rem",color:"rgba(255,255,255,0.25)",marginTop:10}}>🔒 {t.secure}</p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes moneyFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(360deg)}}
+        *{box-sizing:border-box}
+        input[type=number]{-moz-appearance:textfield}
+        input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none}
+        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:rgba(139,92,246,0.3);border-radius:4px}
+      `}</style>
     </div>
   );
 }
